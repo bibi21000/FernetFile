@@ -1,6 +1,6 @@
 [project]
 name = "fernetfile"
-version = "0.0.1"
+version = "0.0.2"
 requires-python = ">= 3.8"
 readme = "README.md"
 description = "A python xxxFile like ( ie GzipFile, BZ2File, ...) for manipulating Fernet encrypted files."
@@ -43,7 +43,8 @@ classifiers = [
 #hello-world = "helloworld.main:main"
 
 [project.optional-dependencies]
-test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit", 'pip-audit @ git+https://github.com/bibi21000/pip-audit@format_junit']
+test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
+build = ["build", 'twine']
 
 [project.urls]
 HomePage = "https://github.com/bibi21000/FernetFile"
