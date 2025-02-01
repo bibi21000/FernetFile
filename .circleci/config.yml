@@ -68,3 +68,6 @@ workflows:
       - testpypi_publish:
           requires:
             - build-and-test
+          filters:
+            tags:
+              only: /^.*[ab]+.*$/
