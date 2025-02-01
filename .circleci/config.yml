@@ -10,7 +10,7 @@ version: 2.1
 orbs:
   # See the Python orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@2.1.1
-
+  codecov: codecov/codecov@5
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
@@ -20,9 +20,7 @@ jobs:
     docker:
       # Specify the version you desire here
       # See:https://circleci.com/developer/images/image/cimg/python
-      - image: cimg/python:3.11
       - image: cimg/python:3.12
-      - image: cimg/python:3.13
 
     # Add steps to the job
     # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
@@ -50,3 +48,4 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test
+      - codecov/upload
