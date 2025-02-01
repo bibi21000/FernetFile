@@ -10,6 +10,7 @@ version: 2.1
 orbs:
   # See the Python orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@2.1.1
+  codecov: codecov/codecov@5
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
@@ -39,6 +40,7 @@ jobs:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: pytest
+      - codecov/upload
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
@@ -47,11 +49,4 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test
-
-orbs:
-  codecov: codecov/codecov@5
-workflows:
-  upload-to-codecov:
-    jobs:
-      - checkout
       - codecov/upload
