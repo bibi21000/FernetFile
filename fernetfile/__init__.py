@@ -5,6 +5,8 @@ The user of the file doesn't have to worry about the encryption,
 but random access is not allowed.
 
 based on Andrew Kuchling's minigzip.py distributed with the zlib module
+and on https://stackoverflow.com/questions/69312922/how-to-encrypt-large-file-using-python#71243173
+
 
 """
 __license__ = """
