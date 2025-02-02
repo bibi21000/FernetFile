@@ -45,7 +45,7 @@ jobs:
       - run:
           name: Upload tests result
           # This assumes pytest is installed via the install-package step above
-          command: codecovcli do-upload --report-type test_results --file <report_name>.junit.xml
+          command: codecovcli do-upload --report-type test_results --file junit.xml
   testpypi_publish:
     docker:
       - image: cimg/python:3.12
