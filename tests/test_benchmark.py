@@ -25,7 +25,7 @@ def test_benchmark_header(random_path):
         ff.write("# Benchmarks\n")
         ff.write("\n")
         ff.write("| Class            | Data                 |  Chunk size |  Orig size  | Crypt size |  Comp ratio | WTime  | Rtime  |\n")
-        ff.write("|:-----------------|:--------------------:|------------:|------------:|-----------:|------------:|-------:|-------:|\n")
+        ff.write("|:-----------------|:---------------------|------------:|------------:|-----------:|------------:|-------:|-------:|\n")
     # ~ urllib.request.urlretrieve("https://inforef.be/swi/download/apprendre_python3_5.pdf", "docpython.pdf")
     urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-pdf-a4.zip", "docpython.pdf.zip")
     with zipfile.ZipFile('docpython.pdf.zip', 'r') as zip_ref:
