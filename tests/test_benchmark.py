@@ -6,7 +6,6 @@ import os
 import importlib
 import time
 from random import randbytes
-import bz2
 import urllib.request
 import zipfile
 
