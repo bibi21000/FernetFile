@@ -3,7 +3,6 @@
 
 """
 import os
-import tempfile
 from random import randbytes
 import io
 
@@ -13,7 +12,12 @@ import fernetfile
 
 import pytest
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 1, 1024 * 1024 * 10), (1024 * 10, 1024 * 1024 * 10), (1024 * 100, 1024 * 1024 * 10) ])
+@pytest.mark.parametrize("buff_size, file_size",
+    [
+        (1024 * 1, 1024 * 10), (1024 * 1, 1024 * 10 + 4), (1024 * 1, 1024 * 10 + 5),
+        (1024 * 10, 1024 * 10), (1024 * 10, 1024 * 10 + 7), (1024 * 10, 1024 * 10 + 3),
+        (1024 * 100, 1024 * 10), (1024 * 100, 1024 * 10 + 9), (1024 * 100, 1024 * 10 + 11),
+    ])
 def test_buffer(random_path, buff_size, file_size):
     fernetfile.BUFFER_SIZE = buff_size
     key = Fernet.generate_key()

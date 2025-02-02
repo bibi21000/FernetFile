@@ -45,6 +45,7 @@ classifiers = [
 [project.optional-dependencies]
 test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
 build = ["build", 'twine']
+zstd = ["pyzst"]
 
 [project.urls]
 HomePage = "https://github.com/bibi21000/FernetFile"
@@ -58,7 +59,7 @@ allow-direct-references = true
 
 [tool.pytest.ini_options]
 # addopts = "--cov=fernetfile --cov-report xml --junitxml=junit.xml"
-addopts = "--cov=fernetfile --durations=0 --capture=sys --cov-report html --junitxml=junit.xml -vv"
+addopts = "--cov=fernetfile --durations=0 --capture=sys --cov-report html --junitxml=junit.xml"
 
 [tool.coverage.run]
 source = ['fernetfile']
@@ -68,4 +69,4 @@ omit = ['tests']
 source = ['fernetfile']
 
 [tool.bandit]
-exclude_dirs = ["tests"]
+exclude_dirs = ["tests", "venv"]

@@ -29,11 +29,12 @@ __all__ = ["FernetFile", "open"]
 READ = 'rb'
 WRITE = 'wb'
 
+META_SIZE = 4
 BUFFER_SIZE = 1024 * 10
 # ~ BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 # ~ CHUNK_SIZE = 1024
 # ~ CHUNK_SIZE = 8 * 1024 - 4
-CHUNK_SIZE = BUFFER_SIZE - 4
+CHUNK_SIZE = BUFFER_SIZE - META_SIZE
 WRITE_BUFFER_SIZE = 5 * BUFFER_SIZE
 
 log = logging.getLogger('fernetfile')
@@ -263,20 +264,20 @@ class FernetDecryptor():
             data = self.unused_data + data
             self.unused_data = None
         while True:
-            size_struct = data[beg:beg + 4]
+            size_struct = data[beg:beg + META_SIZE]
             if len(size_struct) == 0:
                 # ~ log.debug('len %s'%len(size_struct))
                 self.needs_input = False
                 self.eof = True
                 break
             size_data = struct.unpack('<I', size_struct)[0]
-            chunk = data[beg + 4:beg + size_data + 4]
+            chunk = data[beg + META_SIZE:beg + size_data + META_SIZE]
             # ~ log.debug("beg %s, size_data %s, len_chunk %s, chunk %s %s" % (beg, size_data, len(chunk), chunk[:15], chunk[-15:]))
             if len(chunk) < size_data:
                 self.unused_data = data[beg:]
                 break
             ret += self.fernet.decrypt(chunk)
-            beg += size_data + 4
+            beg += size_data + META_SIZE
 
         ret = self.unsent_data + ret
         if self.eof is True and len(ret) > 0:

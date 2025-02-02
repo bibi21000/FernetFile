@@ -31,6 +31,7 @@ jobs:
           name: Install dependencies from pyproject.toml
           command: |
             pip install .
+            pip install .[zstd]
             pip install .[test]
       #- python/install-packages:
           #pkg-manager: pip
@@ -57,6 +58,22 @@ jobs:
       - run:
           name: Upload
           command: python3 -m twine upload --repository testpypi --verbose --user $TWINE_USERNAME --password $TWINE_PASSWORD dist/*
+  pypi_publish:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout # checkout source code to working directory
+      - run:
+          name: Install dependencies from pyproject.toml
+          command: |
+            pip install .
+            pip install .[build]
+      - run:
+          name: Build package
+          command: python3 -m build
+      - run:
+          name: Upload
+          command: python3 -m twine upload --verbose --user $TWINE_USERNAME --password $TWINE_PROD_PASSWORD dist/*
 
 # Orchestrate jobs using workflow
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
@@ -65,9 +82,9 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test
-      - testpypi_publish:
-          requires:
-            - build-and-test
-          filters:
-            tags:
-              only: /^.*[ab]+.*$/
+#      - testpypi_publish:
+#          requires:
+#            - build-and-test
+#          filters:
+#            tags:
+#              only: /^.*[ab]+.*$/
