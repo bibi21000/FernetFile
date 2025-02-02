@@ -10,7 +10,7 @@ version: 2.1
 orbs:
   # See the Python orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@2.1.1
-  codecov: codecov/codecov@5
+  #~ codecov: codecov/codecov@5
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
@@ -41,12 +41,16 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: pytest --cov-report xml --junitxml=junit.xml -o junit_family=legacy
-      - codecov/upload
+          command: pytest --cov-report xml --junitxml=pytest.junit.xml -o junit_family=legacy
+      - run:
+          name: Run ruff
+          command: ruff check --output-format junit -o ruff.junit.xml
+      - run:
+          name: Upload coverage
+          command: codecovcli do-upload
       - run:
           name: Upload tests result
-          # This assumes pytest is installed via the install-package step above
-          command: codecovcli do-upload --report-type test_results --file junit.xml
+          command: codecovcli do-upload --report-type test_results --file pytest.junit.xml --file ruff.junit.xml
   testpypi_publish:
     docker:
       - image: cimg/python:3.12
