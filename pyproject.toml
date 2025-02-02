@@ -46,6 +46,7 @@ classifiers = [
 test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
 build = ["build", 'twine']
 zstd = ["pyzstd"]
+benchmark = ["pytest-ordering"]
 
 [project.urls]
 HomePage = "https://github.com/bibi21000/FernetFile"

@@ -39,6 +39,7 @@ WRITE_BUFFER_SIZE = 5 * BUFFER_SIZE
 
 log = logging.getLogger('fernetfile')
 
+
 class BaseStream(io.BufferedIOBase):
     """Mode-checking helper functions."""
 
@@ -66,8 +67,9 @@ class BaseStream(io.BufferedIOBase):
 class DecryptReader(io.BufferedIOBase):
     """Adapts the decryptor API to a RawIOBase reader API"""
 
-    def __init__(self, fp, decrypt_factory, trailing_error=(), **decrypt_args):
+    def __init__(self, fp, decrypt_factory, buffer_size=BUFFER_SIZE, trailing_error=(), **decrypt_args):
         self._fp = fp
+        self.buffer_size = buffer_size
         self._eof = False
         self._pos = 0  # Current offset in decrypted stream
 
@@ -121,7 +123,7 @@ class DecryptReader(io.BufferedIOBase):
         while True:
             if self._decryptor.eof:
                 # ~ log.debug('here self._decryptor.eof %s'%size)
-                rawblock = (self._decryptor.unused_data or self._fp.read(BUFFER_SIZE))
+                rawblock = (self._decryptor.unused_data or self._fp.read(self.buffer_size))
                 if not rawblock:
                     break
                 # Continue to next stream.
@@ -136,7 +138,7 @@ class DecryptReader(io.BufferedIOBase):
             else:
                 # ~ log.debug('here %s'%size)
                 if self._decryptor.needs_input:
-                    rawblock = self._fp.read(BUFFER_SIZE)
+                    rawblock = self._fp.read(self.buffer_size)
                     if not rawblock:
                         raise EOFError("Compressed file ended before the "
                                        "end-of-stream marker was reached")
@@ -323,7 +325,8 @@ class FernetFile(BaseStream):
     myfileobj = None
 
     def __init__(self, filename=None, mode=None,
-                 fernet_key=None, fileobj=None, mtime=None):
+            fernet_key=None, fileobj=None, mtime=None,
+            write_buffer_size=WRITE_BUFFER_SIZE, chunk_size=CHUNK_SIZE):
         """Constructor for the FernetFile class.
 
         At least one of fileobj and filename must be given a
@@ -354,6 +357,7 @@ class FernetFile(BaseStream):
         to generate a compressed stream that does not depend on creation time.
 
         """
+        self.chunk_size = chunk_size
         if mode and ('t' in mode or 'U' in mode):
             raise ValueError("Invalid mode: {!r}".format(mode))
         if mode and 'b' not in mode:
@@ -388,9 +392,9 @@ class FernetFile(BaseStream):
                     FutureWarning, 2)
             self.mode = WRITE
             self._init_write(filename)
-            self.crypt = FernetCryptor(fernet_key)
+            self.crypt = FernetCryptor(fernet_key, chunk_size=self.chunk_size)
             self._write_mtime = mtime
-            self._buffer_size = WRITE_BUFFER_SIZE
+            self._buffer_size = write_buffer_size
             self._buffer = io.BufferedWriter(_WriteBufferStream(self),
                                              buffer_size=self._buffer_size)
         else:
@@ -561,7 +565,8 @@ class FernetFile(BaseStream):
 
 
 def open(filename, mode="rb", fernet_key=None,
-         encoding=None, errors=None, newline=None):
+         encoding=None, errors=None, newline=None,
+         chunk_size=CHUNK_SIZE):
     """Open a gzip-compressed file in binary or text mode.
 
     The filename argument can be an actual filename (a str or bytes object), or
@@ -593,9 +598,9 @@ def open(filename, mode="rb", fernet_key=None,
 
     frnt_mode = mode.replace("t", "")
     if isinstance(filename, (str, bytes, os.PathLike)):
-        binary_file = FernetFile(filename, frnt_mode, fernet_key)
+        binary_file = FernetFile(filename, mode=frnt_mode, fernet_key=fernet_key, chunk_size=chunk_size)
     elif hasattr(filename, "read") or hasattr(filename, "write"):
-        binary_file = FernetFile(None, frnt_mode, fernet_key, filename)
+        binary_file = FernetFile(None, mode=frnt_mode, fernet_key=fernet_key, fileobj=filename, chunk_size=chunk_size)
     else:
         raise TypeError("filename must be a str or bytes object, or a file")
 

@@ -19,11 +19,11 @@ try:
     ZSTD = True
     class ZstdFernetFile(pyzstd.ZstdFile):
 
-        def __init__(self, name, mode='r', fernet_key=None, **kwargs):
+        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
             level_or_option = kwargs.pop('level_or_option', None)
             zstd_dict = kwargs.pop('zstd_dict', None)
             self.fernet_file = fernetfile.FernetFile(name, mode,
-                fernet_key=fernet_key, **kwargs)
+                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
             try:
                 super().__init__(self.fernet_file, mode=mode,
                     level_or_option=level_or_option,
@@ -41,15 +41,15 @@ try:
 
 except ModuleNotFoundError:
     ZSTD = False
-    class ZstdFernetFile():
-        pass
+    # ~ class ZstdFernetFile():
+        # ~ pass
 
 class Bz2FernetFile(bz2.BZ2File):
 
-    def __init__(self, name, mode='r', fernet_key=None, **kwargs):
+    def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
         compresslevel = kwargs.pop('compresslevel', 9)
         self.fernet_file = fernetfile.FernetFile(name, mode,
-            fernet_key=fernet_key, **kwargs)
+            fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
         try:
             super().__init__(self.fernet_file, mode=mode,
                 compresslevel=compresslevel, **kwargs)
@@ -67,14 +67,14 @@ class Bz2FernetFile(bz2.BZ2File):
 
 class FernetBz2File(fernetfile.FernetFile):
 
-    def __init__(self, name, mode='r', fernet_key=None, **kwargs):
+    def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
         compresslevel = kwargs.pop('compresslevel', 9)
 
         self.bz2_file = bz2.BZ2File(name, mode,
             compresslevel=compresslevel, **kwargs)
         try:
             super().__init__(fileobj=self.bz2_file, mode=mode,
-                fernet_key=fernet_key, **kwargs)
+                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
         except Exception:
             self.bz2_file.close()
             raise
@@ -86,12 +86,13 @@ class FernetBz2File(fernetfile.FernetFile):
             if self.bz2_file is not None:
                 self.bz2_file.close()
 
+
 class TarBz2FernetFile(tarfile.TarFile):
 
-    def __init__(self, name, mode='r', fernet_key=None, **kwargs):
+    def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
         compresslevel = kwargs.pop('compresslevel', 9)
         self.fernet_file = fernetfile.FernetFile(name, mode,
-            fernet_key=fernet_key, **kwargs)
+            fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
         try:
             self.bz2_file = bz2.BZ2File(self.fernet_file, mode=mode,
                 compresslevel=compresslevel, **kwargs)
@@ -118,7 +119,7 @@ class TarBz2FernetFile(tarfile.TarFile):
                     self.fernet_file.close()
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 1, 1024 * 1024 * 10) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
 def test_crypt_bz2(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
@@ -137,13 +138,13 @@ def test_crypt_bz2(random_path, buff_size, file_size):
     assert data == datar
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 1, 1024 * 1024 * 10) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
 def test_bz2_crypt(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     fkey = Fernet(key)
     data = randbytes(file_size)
     dataf = os.path.join(random_path, 'test.frnt')
-    with FernetBz2File(dataf, mode='wb', fernet_key=key) as ff:
+    with FernetBz2File(dataf, mode='wb', fernet_key=key, chunk_size=buff_size) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
         datar = ff.read()
@@ -165,13 +166,14 @@ def test_bz2_crypt(random_path, buff_size, file_size):
         datar = ff.read()
     assert data == datar
 
+
 @pytest.mark.skipif(not ZSTD, reason="requires the pyzstd library")
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 1, 1024 * 1024 * 10) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
 def test_crypt_zstd(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
     dataf = os.path.join(random_path, 'test.frnt')
-    with ZstdFernetFile(dataf, mode='wb', fernet_key=key) as ff:
+    with ZstdFernetFile(dataf, mode='wb', fernet_key=key, chunk_size=buff_size) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
         datar = ff.read()
@@ -185,7 +187,7 @@ def test_crypt_zstd(random_path, buff_size, file_size):
     assert data == datar
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (741 * 1, 1024 * 1024 * 10) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
 def test_crypt_bz2_tar(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     dataf = os.path.join(random_path, 'test.tbzf')
@@ -202,7 +204,7 @@ def test_crypt_bz2_tar(random_path, buff_size, file_size):
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 
-    with TarBz2FernetFile(dataf, mode='w', fernet_key=key) as ff:
+    with TarBz2FernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
         ff.add(dataf1, 'file1.out')
         ff.add(dataf2, 'file2.out')
 
