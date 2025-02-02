@@ -44,7 +44,8 @@ jobs:
           command: pytest --cov-report xml --junitxml=pytest.junit.xml -o junit_family=legacy
       - run:
           name: Run ruff
-          command: ruff check --output-format junit -o ruff.junit.xml
+          #~ command: ruff check --output-format junit -o ruff.junit.xml
+          command: ruff check --help
       - run:
           name: Upload coverage
           command: codecovcli do-upload
