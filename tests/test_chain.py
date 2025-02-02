@@ -20,7 +20,7 @@ try:
     class ZstdFernetFile(pyzstd.ZstdFile):
 
         def __init__(self, name, mode='r', fernet_key=None, **kwargs):
-            level_or_option = kwargs.pop('level_or_option', 15)
+            level_or_option = kwargs.pop('level_or_option', None)
             zstd_dict = kwargs.pop('zstd_dict', None)
             self.fernet_file = fernetfile.FernetFile(name, mode,
                 fernet_key=fernet_key, **kwargs)
@@ -187,7 +187,6 @@ def test_crypt_zstd(random_path, buff_size, file_size):
 
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 1, 1024 * 1024 * 10) ])
 def test_crypt_bz2_tar(random_path, buff_size, file_size):
-    random_path ='.'
     key = Fernet.generate_key()
     data = randbytes(file_size)
     dataf = os.path.join(random_path, 'test.tbzf')
