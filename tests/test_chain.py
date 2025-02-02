@@ -185,21 +185,20 @@ def test_crypt_zstd(random_path, buff_size, file_size):
     assert data == datar
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 1, 1024 * 1024 * 10) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (741 * 1, 1024 * 1024 * 10) ])
 def test_crypt_bz2_tar(random_path, buff_size, file_size):
     key = Fernet.generate_key()
-    data = randbytes(file_size)
     dataf = os.path.join(random_path, 'test.tbzf')
 
     dataf1 = os.path.join(random_path, 'file1.out')
     with open(dataf1, "wb") as out:
-        out.write(os.urandom(2395))
+        out.write(os.urandom(file_size * 5))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
     dataf2 = os.path.join(random_path, 'file2.out')
     with open(dataf2, "wb") as out:
-        out.write(os.urandom(74128))
+        out.write(os.urandom(file_size * 50))
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 

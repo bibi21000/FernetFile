@@ -45,13 +45,14 @@ jobs:
       - run:
           name: Run ruff
           #~ command: ruff check --output-format junit -o ruff.junit.xml
-          command: ruff check --help
+          command: ruff check --output-format junit .
       - run:
           name: Upload coverage
           command: codecovcli do-upload
       - run:
           name: Upload tests result
-          command: codecovcli do-upload --report-type test_results --file pytest.junit.xml --file ruff.junit.xml
+          #~ command: codecovcli do-upload --report-type test_results --file pytest.junit.xml --file ruff.junit.xml
+          command: codecovcli do-upload --report-type test_results --file pytest.junit.xml
   testpypi_publish:
     docker:
       - image: cimg/python:3.12
