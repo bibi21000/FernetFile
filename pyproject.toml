@@ -45,7 +45,7 @@ classifiers = [
 [project.optional-dependencies]
 test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
 build = ["build", 'twine']
-zstd = ["pyzst"]
+zstd = ["pyzstd"]
 
 [project.urls]
 HomePage = "https://github.com/bibi21000/FernetFile"
