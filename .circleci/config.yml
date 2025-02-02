@@ -33,6 +33,7 @@ jobs:
             pip install .
             pip install .[zstd]
             pip install .[test]
+            pip install codecov-cli
       #- python/install-packages:
           #pkg-manager: pip
           # app-dir: ~/project/package-directory/  # If your requirements.txt isn't in the root directory.
@@ -42,7 +43,6 @@ jobs:
           # This assumes pytest is installed via the install-package step above
           command: pytest --cov-report xml --junitxml=junit.xml -o junit_family=legacy
       - codecov/upload
-      - codecov/upload report_type=test_results
       - run:
           name: Upload tests result
           # This assumes pytest is installed via the install-package step above
