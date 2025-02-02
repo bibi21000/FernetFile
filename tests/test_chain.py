@@ -151,7 +151,7 @@ class TarBz2FernetFile(tarfile.TarFile):
                     self.fernet_file.close()
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 1024 * 2) ])
 def test_crypt_bz2(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
@@ -170,7 +170,7 @@ def test_crypt_bz2(random_path, buff_size, file_size):
     assert data == datar
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 1024 * 2) ])
 def test_bz2_crypt(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     fkey = Fernet(key)
@@ -200,7 +200,7 @@ def test_bz2_crypt(random_path, buff_size, file_size):
 
 
 @pytest.mark.skipif(not ZSTD, reason="requires the pyzstd library")
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 1024 * 2) ])
 def test_crypt_zstd(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
@@ -220,7 +220,7 @@ def test_crypt_zstd(random_path, buff_size, file_size):
 
 
 @pytest.mark.skipif(not ZSTD, reason="requires the pyzstd library")
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 1024 * 2) ])
 def test_crypt_zstd_tar(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     dataf = os.path.join(random_path, 'test.tbzf')
@@ -250,7 +250,7 @@ def test_crypt_zstd_tar(random_path, buff_size, file_size):
         fdatae = ff.extractfile('file2.out')
         assert fdatae.read() == ddataf2
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 1024 * 2) ])
 def test_crypt_bz2_tar(random_path, buff_size, file_size):
     key = Fernet.generate_key()
     dataf = os.path.join(random_path, 'test.tbzf')
