@@ -42,7 +42,7 @@ jobs:
           # This assumes pytest is installed via the install-package step above
           command: pytest --cov-report xml --junitxml=junit.xml -o junit_family=legacy
       - codecov/upload
-      - codecov/upload report_type test_results
+      - codecov/upload report_type=test_results
       - run:
           name: Upload tests result
           # This assumes pytest is installed via the install-package step above
