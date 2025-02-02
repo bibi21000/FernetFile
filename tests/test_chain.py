@@ -20,12 +20,14 @@ try:
     class ZstdFernetFile(pyzstd.ZstdFile):
 
         def __init__(self, name, mode='r', fernet_key=None, **kwargs):
-            compresslevel = kwargs.pop('compresslevel', 9)
+            level_or_option = kwargs.pop('level_or_option', 15)
+            zstd_dict = kwargs.pop('zstd_dict', None)
             self.fernet_file = fernetfile.FernetFile(name, mode,
                 fernet_key=fernet_key, **kwargs)
             try:
                 super().__init__(self.fernet_file, mode=mode,
-                    compresslevel=compresslevel, **kwargs)
+                    level_or_option=level_or_option,
+                    zstd_dict=zstd_dict, **kwargs)
             except Exception:
                 self.fernet_file.close()
                 raise
