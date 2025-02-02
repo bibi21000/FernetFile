@@ -15,7 +15,7 @@ from cryptography.fernet import Fernet
 import fernetfile
 
 import pytest
-from .test_chain import Bz2FernetFile, ZstdFernetFile, TarBz2FernetFile
+from .test_chain import Bz2FernetFile, ZstdFernetFile, TarBz2FernetFile, TarZstdFernetFile
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
@@ -24,8 +24,8 @@ def test_benchmark_header(random_path):
     with open('BENCHMARK.md','wt') as ff:
         ff.write("# Benchmarks\n")
         ff.write("\n")
-        ff.write("| Class            | Data                 |  Chunk size |  Orig size  | Crypt size |  Comp ratio | WTime  | Rtime  |\n")
-        ff.write("|:-----------------|:---------------------|------------:|------------:|-----------:|------------:|-------:|-------:|\n")
+        ff.write("| Class                | Data                 |  Chunk size |  Orig size  | Crypt size |  Comp ratio | WTime  | Rtime  |\n")
+        ff.write("|:---------------------|:---------------------|------------:|------------:|-----------:|------------:|-------:|-------:|\n")
     urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-pdf-a4.zip", "docpython.pdf.zip")
     with zipfile.ZipFile('docpython.pdf.zip', 'r') as zip_ref:
         zip_ref.extractall('.')
@@ -137,7 +137,7 @@ def test_benchmark(random_path, fcls, dt, buff_size, file_size):
     assert data == datar
     comp_size = os.path.getsize(dataf)
     with open('BENCHMARK.md','at') as ff:
-        ff.write("| %-16s | %-20s | %11.0f |  %10.0f | %10.0f | %10.2f%% | %6.2f | %6.2f |\n" % (("%s" % fcls).split('.')[-1][:-2], dt, buff_size / 1024, file_size / 1024, comp_size / 1024, comp_size / file_size * 100, time_write - time_start, time_read - time_write))
+        ff.write("| %-20s | %-20s | %11.0f |  %10.0f | %10.0f | %10.2f%% | %6.2f | %6.2f |\n" % (("%s" % fcls).split('.')[-1][:-2], dt, buff_size / 1024, file_size / 1024, comp_size / 1024, comp_size / file_size * 100, time_write - time_start, time_read - time_write))
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
@@ -146,6 +146,9 @@ def test_benchmark(random_path, fcls, dt, buff_size, file_size):
     (TarBz2FernetFile, 'html,js and pdf', 1024 * 16, 0),
     (TarBz2FernetFile, 'html,js and pdf', 1024 * 256, 0),
     (TarBz2FernetFile, 'html,js and pdf', 1024 * 1024, 0),
+    (TarZstdFernetFile, 'html,js and pdf', 1024 * 16, 0),
+    (TarZstdFernetFile, 'html,js and pdf', 1024 * 256, 0),
+    (TarZstdFernetFile, 'html,js and pdf', 1024 * 1024, 0),
 ])
 def test_benchmark_tar(random_path, fcls, dt, buff_size, file_size):
     key = Fernet.generate_key()
@@ -179,5 +182,5 @@ def test_benchmark_tar(random_path, fcls, dt, buff_size, file_size):
             datar = ff.read()
         assert data == datar
     with open('BENCHMARK.md','at') as ff:
-        ff.write("| %-16s | %-20s | %11.0f |  %10.0f | %10.0f | %10.2f%% | %6.2f | %6.2f |\n" % (("%s" % fcls).split('.')[-1][:-2], dt, buff_size / 1024, file_size / 1024, comp_size / 1024, comp_size / file_size * 100, time_write - time_start, time_read - time_write))
+        ff.write("| %-20s | %-20s | %11.0f |  %10.0f | %10.0f | %10.2f%% | %6.2f | %6.2f |\n" % (("%s" % fcls).split('.')[-1][:-2], dt, buff_size / 1024, file_size / 1024, comp_size / 1024, comp_size / file_size * 100, time_write - time_start, time_read - time_write))
 

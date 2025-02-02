@@ -39,6 +39,38 @@ try:
                 if self.fernet_file is not None:
                     self.fernet_file.close()
 
+    class TarZstdFernetFile(tarfile.TarFile):
+
+        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
+            level_or_option = kwargs.pop('level_or_option', None)
+            zstd_dict = kwargs.pop('zstd_dict', None)
+            self.fernet_file = fernetfile.FernetFile(name, mode,
+                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
+            try:
+                self.zstd_file = pyzstd.ZstdFile(self.fernet_file, mode=mode,
+                    level_or_option=level_or_option, zstd_dict=zstd_dict, **kwargs)
+                try:
+                    super().__init__(fileobj=self.zstd_file, mode=mode, **kwargs)
+
+                except Exception:
+                    self.zstd_file.close()
+                    raise
+
+            except Exception:
+                self.fernet_file.close()
+                raise
+
+        def close(self):
+            try:
+                super().close()
+            finally:
+                try:
+                    if self.fernet_file is not None:
+                        self.zstd_file.close()
+                finally:
+                    if self.fernet_file is not None:
+                        self.fernet_file.close()
+
 except ModuleNotFoundError:
     ZSTD = False
     # ~ class ZstdFernetFile():
@@ -186,6 +218,37 @@ def test_crypt_zstd(random_path, buff_size, file_size):
         datar = ff.read()
     assert data == datar
 
+
+@pytest.mark.skipif(not ZSTD, reason="requires the pyzstd library")
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
+def test_crypt_zstd_tar(random_path, buff_size, file_size):
+    key = Fernet.generate_key()
+    dataf = os.path.join(random_path, 'test.tbzf')
+
+    dataf1 = os.path.join(random_path, 'file1.out')
+    with open(dataf1, "wb") as out:
+        out.write(os.urandom(file_size * 5))
+    with open(dataf1, "rb") as ff:
+        ddataf1 = ff.read()
+
+    dataf2 = os.path.join(random_path, 'file2.out')
+    with open(dataf2, "wb") as out:
+        out.write(os.urandom(file_size * 50))
+    with open(dataf2, "rb") as ff:
+        ddataf2 = ff.read()
+
+    with TarZstdFernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
+        ff.add(dataf1, 'file1.out')
+        ff.add(dataf2, 'file2.out')
+
+    os.unlink(dataf1)
+    os.unlink(dataf2)
+
+    with TarZstdFernetFile(dataf, "r", fernet_key=key) as ff:
+        fdatae = ff.extractfile('file1.out')
+        assert fdatae.read() == ddataf1
+        fdatae = ff.extractfile('file2.out')
+        assert fdatae.read() == ddataf2
 
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 10, 1024 * 1024 * 2) ])
 def test_crypt_bz2_tar(random_path, buff_size, file_size):
