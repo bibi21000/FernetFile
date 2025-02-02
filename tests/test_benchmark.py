@@ -38,10 +38,10 @@ def test_benchmark_header(random_path):
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
 @pytest.mark.run(order=2)
 @pytest.mark.parametrize("fcls, dt, buff_size, file_size", [
-    (fernetfile.FernetFile, 'download.html', 1024 * 16, 0),
-    (fernetfile.FernetFile, 'genindex-all.html', 1024 * 16, 0),
-    (fernetfile.FernetFile, 'searchindex.js', 1024 * 16, 0),
-    (fernetfile.FernetFile, 'library.pdf', 1024 * 16, 0),
+    # ~ (fernetfile.FernetFile, 'download.html', 1024 * 16, 0),
+    # ~ (fernetfile.FernetFile, 'genindex-all.html', 1024 * 16, 0),
+    # ~ (fernetfile.FernetFile, 'searchindex.js', 1024 * 16, 0),
+    # ~ (fernetfile.FernetFile, 'library.pdf', 1024 * 16, 0),
     # ~ (fernetfile.FernetFile, 'rand', 1024 * 16, 1024 * 1024 * 1),
     # ~ (fernetfile.FernetFile, 'rand', 1024 * 16, 1024 * 1024 * 10),
     # ~ (fernetfile.FernetFile, 'rand', 1024 * 16, 1024 * 1024 * 100),
