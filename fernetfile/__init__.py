@@ -30,7 +30,7 @@ READ = 'rb'
 WRITE = 'wb'
 
 META_SIZE = 4
-BUFFER_SIZE = 1024 * 10
+BUFFER_SIZE = 1024 * 64
 # ~ BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 # ~ CHUNK_SIZE = 1024
 # ~ CHUNK_SIZE = 8 * 1024 - 4
@@ -55,13 +55,13 @@ class BaseStream(io.BufferedIOBase):
         if not self.writable():
             raise io.UnsupportedOperation("File not open for writing")
 
-    def _check_can_seek(self):
-        if not self.readable():
-            raise io.UnsupportedOperation("Seeking is only supported "
-                                          "on files open for reading")
-        if not self.seekable():
-            raise io.UnsupportedOperation("The underlying file object "
-                                          "does not support seeking")
+    # ~ def _check_can_seek(self):
+        # ~ if not self.readable():
+            # ~ raise io.UnsupportedOperation("Seeking is only supported "
+                                          # ~ "on files open for reading")
+        # ~ if not self.seekable():
+            # ~ raise io.UnsupportedOperation("The underlying file object "
+                                          # ~ "does not support seeking")
 
 
 class DecryptReader(io.BufferedIOBase):
@@ -326,7 +326,7 @@ class FernetFile(BaseStream):
 
     def __init__(self, filename=None, mode=None,
             fernet_key=None, fileobj=None, mtime=None,
-            write_buffer_size=WRITE_BUFFER_SIZE, chunk_size=CHUNK_SIZE):
+            chunk_size=CHUNK_SIZE, write_buffer_size=WRITE_BUFFER_SIZE):
         """Constructor for the FernetFile class.
 
         At least one of fileobj and filename must be given a
@@ -356,8 +356,16 @@ class FernetFile(BaseStream):
         If mtime is omitted or None, the current time is used. Use mtime = 0
         to generate a compressed stream that does not depend on creation time.
 
+        Encryption is done by chunks to reduce memory footprint. The default
+        chunk_size is 64KB.
+
+        Encryption is done by chunks to reduce memory footprint. The default
+        chunk_size is 64KB.
+
         """
         self.chunk_size = chunk_size
+        if self.chunk_size != CHUNK_SIZE and write_buffer_size == WRITE_BUFFER_SIZE:
+            write_buffer_size = 5 * self.chunk_size
         if mode and ('t' in mode or 'U' in mode):
             raise ValueError("Invalid mode: {!r}".format(mode))
         if mode and 'b' not in mode:
@@ -420,19 +428,20 @@ class FernetFile(BaseStream):
         self.offset = 0  # Current file offset for seek(), tell(), etc
 
     def tell(self):
+        """Return the current file position."""
         self._check_not_closed()
         self._buffer.flush()
         return super().tell()
 
-    def write(self,data):
-        self._check_not_closed()
-        if self.mode != WRITE:
-            import errno
-            raise OSError(errno.EBADF, "write() on read-only FernetFile object")
+    def write(self, data):
+        """Write a byte string to the file.
 
-        if self.fileobj is None:
-            raise ValueError("write() on closed FernetFile object")
-
+        Returns the number of uncompressed bytes written, which is
+        always the length of data in bytes. Note that due to buffering,
+        the file on disk may not reflect the data written until close()
+        is called.
+        """
+        self._check_can_write()
         return self._buffer.write(data)
 
     def _write_raw(self, data):
@@ -454,40 +463,46 @@ class FernetFile(BaseStream):
         return length
 
     def read(self, size=-1):
-        # ~ log.debug("read size %s" % size)
-        # ~ log.debug("self._buffer size %s" % len(self._buffer))
-        self._check_not_closed()
-        if self.mode != READ:
-            import errno
-            raise OSError(errno.EBADF, "read() on write-only FernetFile object")
+        """Read up to size uncompressed bytes from the file.
+
+        If size is negative or omitted, read until EOF is reached.
+        Returns b'' if the file is already at EOF.
+        """
+        self._check_can_read()
         return self._buffer.read(size)
 
     def read1(self, size=-1):
-        """Implements BufferedIOBase.read1()
+        """Read up to size uncompressed bytes, while trying to avoid
+        making multiple reads from the underlying stream. Reads up to a
+        buffer's worth of data if size is negative.
 
-        Reads up to a buffer's worth of data if size is negative."""
-        self._check_not_closed()
-        if self.mode != READ:
-            import errno
-            raise OSError(errno.EBADF, "read1() on write-only FernetFile object")
-
+        Returns b'' if the file is at EOF.
+        """
+        self._check_can_read()
         if size < 0:
             size = io.DEFAULT_BUFFER_SIZE
         return self._buffer.read1(size)
 
     def peek(self, n):
-        self._check_not_closed()
-        if self.mode != READ:
-            import errno
-            raise OSError(errno.EBADF, "peek() on write-only FernetFile object")
+        """Return buffered data without advancing the file position.
+
+        Always returns at least one byte of data, unless at EOF.
+        The exact number of bytes returned is unspecified.
+        """
+        self._check_can_read()
         return self._buffer.peek(n)
 
     @property
     def closed(self):
+        """True if this file is closed."""
         return self.fileobj is None
 
     def close(self):
-        '''Close the file'''
+        """Flush and close the file.
+
+        May be called more than once without error. Once the file is
+        closed, any other operation on it will raise a ValueError.
+        """
         fileobj = self.fileobj
         if fileobj is None or self._buffer.closed:
             return
@@ -517,25 +532,47 @@ class FernetFile(BaseStream):
         This will raise AttributeError if the underlying file object
         doesn't support fileno().
         """
+        self._check_not_closed()
         return self.fileobj.fileno()
 
     def rewind(self):
         '''Return the uncompressed stream file position indicator to the
-        beginning of the file'''
+        beginning of the file
+        '''
         if self.mode != READ:
             raise OSError("Can't rewind in write mode")
         self._buffer.seek(0)
 
     def readable(self):
+        """Return whether the file was opened for reading."""
+        self._check_not_closed()
         return self.mode == READ
 
     def writable(self):
+        """Return whether the file was opened for writing."""
+        self._check_not_closed()
         return self.mode == WRITE
 
     def seekable(self):
-        return True
+        """Return whether the file supports seeking."""
+        return self.readable() and self._buffer.seekable()
 
     def seek(self, offset, whence=io.SEEK_SET):
+        """Change the file position.
+
+        The new position is specified by offset, relative to the
+        position indicated by whence. Values for whence are:
+
+            0: start of stream (default); offset must not be negative
+            1: current stream position
+            2: end of stream; offset must not be positive
+
+        Returns the new file position.
+
+        Note that seeking is emulated, so depending on the parameters,
+        this operation may be extremely slow.
+        """
+        # ~ self._check_can_seek()
         if self.mode == WRITE:
             self._check_not_closed()
             # Flush buffer to ensure validity of self.offset
@@ -567,7 +604,7 @@ class FernetFile(BaseStream):
 def open(filename, mode="rb", fernet_key=None,
          encoding=None, errors=None, newline=None,
          chunk_size=CHUNK_SIZE):
-    """Open a gzip-compressed file in binary or text mode.
+    """Open a Fernet file in binary or text mode.
 
     The filename argument can be an actual filename (a str or bytes object), or
     an existing file object to read from or write to.
@@ -584,6 +621,8 @@ def open(filename, mode="rb", fernet_key=None,
     io.TextIOWrapper instance with the specified encoding, error handling
     behavior, and line ending(s).
 
+    Encryption is done by chunks to reduce memory footprint. The default
+    chunk_size is 64KB.
     """
     if "t" in mode:
         if "b" in mode:

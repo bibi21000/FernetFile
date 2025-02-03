@@ -2,4 +2,6 @@
 [![codecov](https://codecov.io/gh/bibi21000/FernetFile/graph/badge.svg?token=4124GIOJAK)](https://codecov.io/gh/bibi21000/FernetFile)
 
 # FernetFile
-A python xxxFile like ( ie GzipFile, BZ2File, ...) for manipulating Fernet encrypted files.
+A python xxxFile like (ie GzipFile, BZ2File, ...) for encrypting files with Fernet.
+
+

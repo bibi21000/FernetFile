@@ -75,6 +75,9 @@ def test_seek(random_path):
         assert not ff.readable()
         with pytest.raises(OSError):
             ff.rewind()
+        with pytest.raises(OSError):
+            ff.seek(0, whence=io.SEEK_SET)
+        ff.seek(0, whence=io.SEEK_CUR)
 
     with fernetfile.open(dataf, "rb", fernet_key=key) as ff:
         assert ff.fileno() is not None
@@ -141,6 +144,7 @@ def test_reader(random_path):
             datar = fp.read(7)
             assert b'0111110' == datar
             fp.seek(-7, whence=io.SEEK_CUR)
+            assert fp.tell() == 1784
             datar = fp.read(7)
             assert b'0111110' == datar
             fp.seek(0, whence=io.SEEK_END)
@@ -197,6 +201,7 @@ def test_fernetfile(random_path):
     dataf = os.path.join(random_path, 'test_repr.frnt')
     with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
+        assert ff.seekable() == False
         assert repr(ff).startswith("<FernetFile ")
         with pytest.raises(OSError):
             data = ff.read()
@@ -207,7 +212,8 @@ def test_fernetfile(random_path):
         ff.fileobj = None
         with pytest.raises(ValueError):
             ff.write(b'rrrrrrrr')
-        ff.seekable()
+        with pytest.raises(ValueError):
+            ff.seekable()
 
     with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
@@ -217,6 +223,8 @@ def test_fernetfile(random_path):
         with pytest.raises(OSError):
             ff.write(b'rrrrrrrr')
         ff.seek(-1)
+        assert ff.tell() == 0
+        assert ff.seekable() == True
 
     with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
         fpp = ff
@@ -241,6 +249,14 @@ def test_peek(random_path):
 
     with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
+
+    with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
+        datar = ff.read1()
+        assert datar == data
+
+    with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
+        datar = ff.read1(1)
+        assert datar == b'a'
 
     with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
         datar = ff.readline()
