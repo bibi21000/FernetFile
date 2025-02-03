@@ -58,16 +58,17 @@ class BaseStream(io.BufferedIOBase):
     # ~ def _check_can_seek(self):
         # ~ if not self.readable():
             # ~ raise io.UnsupportedOperation("Seeking is only supported "
-                                          # ~ "on files open for reading")
+              # ~ "on files open for reading")
         # ~ if not self.seekable():
             # ~ raise io.UnsupportedOperation("The underlying file object "
-                                          # ~ "does not support seeking")
+              # ~ "does not support seeking")
 
 
 class DecryptReader(io.BufferedIOBase):
     """Adapts the decryptor API to a RawIOBase reader API"""
 
-    def __init__(self, fp, decrypt_factory, buffer_size=BUFFER_SIZE, trailing_error=(), **decrypt_args):
+    def __init__(self, fp, decrypt_factory, buffer_size=BUFFER_SIZE,
+            trailing_error=(), **decrypt_args):
         self._fp = fp
         self.buffer_size = buffer_size
         self._eof = False
@@ -107,7 +108,8 @@ class DecryptReader(io.BufferedIOBase):
             # ~ if self._old_data == data:
                 # ~ log.warning('duplicate')
             # ~ self._old_data = data
-            # ~ log.debug('readinto : %s, byte_view size %s mark %s' % (len(data), len(byte_view), self._marks))
+            # ~ log.debug('readinto : %s, byte_view size %s mark %s' %
+                # ~ (len(data), len(byte_view), self._marks))
             # ~ log.debug('readinto : %s' %(byte_view))
             byte_view[:len(data)] = data
         return len(data)
@@ -123,7 +125,8 @@ class DecryptReader(io.BufferedIOBase):
         while True:
             if self._decryptor.eof:
                 # ~ log.debug('here self._decryptor.eof %s'%size)
-                rawblock = (self._decryptor.unused_data or self._fp.read(self.buffer_size))
+                rawblock = (self._decryptor.unused_data or
+                    self._fp.read(self.buffer_size))
                 if not rawblock:
                     break
                 # Continue to next stream.
@@ -147,7 +150,8 @@ class DecryptReader(io.BufferedIOBase):
                 # ~ log.debug('rawblock %s'%len(rawblock))
                 data = self._decryptor.decrypt(rawblock, size)
                 self._marks += 1
-            # ~ log.debug("read : data %s, len data %s, unused_data %s, unsent_data %s" % (type(data), len(data) if data is not None else 0, len(self._decryptor.unused_data) if self._decryptor.unused_data is not None else 0, len(self._decryptor.unsent_data)))
+            # ~ log.debug("read : data %s, len data %s, unused_data %s, unsent_data %s" %
+            # ~ (type(data), len(data) if data is not None else 0, len(self._decryptor.unused_data) if self._decryptor.unused_data is not None else 0, len(self._decryptor.unsent_data)))
             if data:
                 break
         if not data:
@@ -227,14 +231,16 @@ class FernetCryptor():
                 break
             enc = self.fernet.encrypt(chunk)
             self._marks += 1
-            # ~ log.debug("len enc %s, chunk size %s" % (len(enc), self.chunk_size))
+            # ~ log.debug("len enc %s, chunk size %s" %
+                # ~ (len(enc), self.chunk_size))
             ret += struct.pack('<I', len(enc))
             ret += enc
             if len(chunk) < self.chunk_size:
                 break
             beg += self.chunk_size
 
-        log.debug("FernetCryptor.compress : len ret %s, chunk size %s, marks %s" % (len(ret), self.chunk_size, self._marks))
+        log.debug("FernetCryptor.compress : len ret %s, chunk size %s, marks %s" %
+            (len(ret), self.chunk_size, self._marks))
         return ret
 
     def flush(self):
@@ -274,7 +280,8 @@ class FernetDecryptor():
                 break
             size_data = struct.unpack('<I', size_struct)[0]
             chunk = data[beg + META_SIZE:beg + size_data + META_SIZE]
-            # ~ log.debug("beg %s, size_data %s, len_chunk %s, chunk %s %s" % (beg, size_data, len(chunk), chunk[:15], chunk[-15:]))
+            # ~ log.debug("beg %s, size_data %s, len_chunk %s, chunk %s %s" %
+                # ~ (beg, size_data, len(chunk), chunk[:15], chunk[-15:]))
             if len(chunk) < size_data:
                 self.unused_data = data[beg:]
                 break
