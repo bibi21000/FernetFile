@@ -201,7 +201,7 @@ def test_fernetfile(random_path):
     dataf = os.path.join(random_path, 'test_repr.frnt')
     with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
-        assert ff.seekable() == False
+        assert ff.seekable() is False
         assert repr(ff).startswith("<FernetFile ")
         with pytest.raises(OSError):
             data = ff.read()
@@ -224,7 +224,7 @@ def test_fernetfile(random_path):
             ff.write(b'rrrrrrrr')
         ff.seek(-1)
         assert ff.tell() == 0
-        assert ff.seekable() == True
+        assert ff.seekable() is True
 
     with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
         fpp = ff
