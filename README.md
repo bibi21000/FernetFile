@@ -24,8 +24,7 @@ Losing this key means losing the data.
 
 ### Text files
 
-    ```python
-
+```
     import fernetfile
 
     with fernetfile.open('test.txc', mode='wt', fernet_key=key, encoding="utf-8") as ff:
@@ -39,18 +38,21 @@ Losing this key means losing the data.
 
     with fernetfile.open('test.txc', "rt", fernet_key=key, encoding="utf-8") as ff:
         data = ff.readlines()
-
-    ```
+```
 
 ### Binary files
 
->    import fernetfile
->
->    with fernetfile.open('test.dac', mode='wb', fernet_key=key) as ff:
->        ff.write(data)
->
->    with fernetfile.open('test.dac', "rb", fernet_key=key) as ff:
->        data = ff.read()
+```
+
+    import fernetfile
+
+    with fernetfile.open('test.dac', mode='wb', fernet_key=key) as ff:
+        ff.write(data)
+
+    with fernetfile.open('test.dac', "rb", fernet_key=key) as ff:
+        data = ff.read()
+
+```
 
 ## Use the xxxFile like interface
 
