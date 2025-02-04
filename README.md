@@ -62,7 +62,7 @@ Binary files :
         data = ff.read()
 ```
 
-## Use the FernetFile like interface
+## Use the FernetFile interface
 
 ```
     import fernetfile
@@ -74,7 +74,7 @@ Binary files :
         data = ff.read()
 ```
 
-## Chain it to compress
+## Chain it to bz2
 
 ```
     import fernetfile
@@ -108,27 +108,28 @@ Binary files :
         data = ff.read()
 ```
 
-## Chain it to tar and compress
+## Chain it to tar and pyzstd
 
 ```
     import fernetfile
-    import bz2
+    import pyzstd
     import tarfile
 
-    class TarBz2FernetFile(tarfile.TarFile):
+    class TarZstdFernetFile(tarfile.TarFile):
 
-        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, \**kwargs):
-            compresslevel = kwargs.pop('compresslevel', 9)
+        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
+            level_or_option = kwargs.pop('level_or_option', None)
+            zstd_dict = kwargs.pop('zstd_dict', None)
             self.fernet_file = fernetfile.FernetFile(name, mode,
-                fernet_key=fernet_key, chunk_size=chunk_size, \**kwargs)
+                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
             try:
-                self.bz2_file = bz2.BZ2File(self.fernet_file, mode=mode,
-                    compresslevel=compresslevel, \**kwargs)
+                self.zstd_file = pyzstd.ZstdFile(self.fernet_file, mode=mode,
+                    level_or_option=level_or_option, zstd_dict=zstd_dict, **kwargs)
                 try:
-                    super().__init__(fileobj=self.bz2_file, mode=mode, \**kwargs)
+                    super().__init__(fileobj=self.zstd_file, mode=mode, **kwargs)
 
                 except Exception:
-                    self.bz2_file.close()
+                    self.zstd_file.close()
                     raise
 
             except Exception:
@@ -141,17 +142,17 @@ Binary files :
             finally:
                 try:
                     if self.fernet_file is not None:
-                        self.bz2_file.close()
+                        self.zstd_file.close()
                 finally:
                     if self.fernet_file is not None:
                         self.fernet_file.close()
 
 
-    with TarBz2FernetFile('test.bzc', mode='wb', fernet_key=key) as ff:
+    with TarZstdFernetFile('test.bzc', mode='wb', fernet_key=key) as ff:
         ff.add(dataf1, 'file1.out')
         ff.add(dataf2, 'file2.out')
 
-    with TarBz2FernetFile('test.bzc', mode='rb', fernet_key=key) as ff:
+    with TarZstdFernetFile('test.bzc', mode='rb', fernet_key=key) as ff:
         fdata1 = ff.extractfile('file1.out')
         fdata2 = ff.extractfile('file2.out')
 ```
