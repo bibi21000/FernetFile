@@ -6,7 +6,7 @@
 A python xxxFile like (ie GzipFile, BZ2File, ...) for encrypting files with Fernet.
 
  - encrypting / decrypting data using chunks to reduce memory footprint
- - chainable with other python xxxFile interfaces
+ - chainable with other python xxxFile interfaces (stream mode)
  - look at BENCHMARK.md ... and chain :)
  - look at tests for examples
 
