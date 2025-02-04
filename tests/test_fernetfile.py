@@ -63,6 +63,19 @@ def test_encoding(random_path):
         datar = ff.readline()
         assert datal[2] == datar
 
+    datal = ["Ceci est un texte avec des accents : éè","avec plusieurs","lignes"]
+    dataf = os.path.join(random_path, 'test_encoding.frnt')
+
+    with fernetfile.open(dataf, mode='wt', fernet_key=key, encoding="utf-8") as ff:
+        ff.writelines(data)
+
+    with fernetfile.open(dataf, "rt", fernet_key=key, encoding="utf-8") as ff:
+        datar = ff.readlines()
+
+    assert datal[0] + '\n' == datar[0]
+    assert datal[1] + '\n' == datar[1]
+    assert datal[2] == datar[2]
+
 def test_seek(random_path):
     key = Fernet.generate_key()
     data = randbytes(1784) + b'0111110' + randbytes(3594) + b'0100010' + randbytes(2145)
