@@ -7,11 +7,17 @@ A python xxxFile like (ie GzipFile, BZ2File, ...) for encrypting files with Fern
 
  - encrypting / decrypting data using chunks to reduce memory footprint
  - chainable with other python xxxFile interfaces
- - look at benchmarks ... and chain :)
+ - look at BENCHMARK.md ... and chain :)
  - look at tests for examples
 
 
-## create your encryption key
+## Install
+
+```
+    pip install fernetfile
+```
+
+## Create your encryption key
 
 ```
     from cryptography.fernet import Fernet
@@ -26,7 +32,7 @@ Losing this key means losing the data.
 
 ## "open" your crytpted files like normal files
 
-### Text files
+Text files :
 
 ```
     import fernetfile
@@ -44,7 +50,7 @@ Losing this key means losing the data.
         data = ff.readlines()
 ```
 
-### Binary files
+Binary files :
 
 ```
     import fernetfile
@@ -102,7 +108,7 @@ Losing this key means losing the data.
         data = ff.read()
 ```
 
-## Chain to tar and compress and encrypt
+## Chain to tar, compress and encrypt
 
 ```
     import fernetfile
