@@ -25,6 +25,7 @@ Losing this key means losing the data.
 ### Text files
 
     ```python
+
     import fernetfile
 
     with fernetfile.open('test.txc', mode='wt', fernet_key=key, encoding="utf-8") as ff:
@@ -38,6 +39,7 @@ Losing this key means losing the data.
 
     with fernetfile.open('test.txc', "rt", fernet_key=key, encoding="utf-8") as ff:
         data = ff.readlines()
+
     ```
 
 ### Binary files
