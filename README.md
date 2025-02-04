@@ -24,19 +24,21 @@ Losing this key means losing the data.
 
 ### Text files
 
->    import fernetfile
->
->    with fernetfile.open('test.txc', mode='wt', fernet_key=key, encoding="utf-8") as ff:
->        ff.write(data)
->
->    with fernetfile.open('test.txc', "rt", fernet_key=key, encoding="utf-8") as ff:
->        data = ff.read()
->
->    with fernetfile.open('test.txc', mode='wt', fernet_key=key, encoding="utf-8") as ff:
->        ff.writelines(data)
->
->    with fernetfile.open('test.txc', "rt", fernet_key=key, encoding="utf-8") as ff:
->        data = ff.readlines()
+    ```python
+    import fernetfile
+
+    with fernetfile.open('test.txc', mode='wt', fernet_key=key, encoding="utf-8") as ff:
+        ff.write(data)
+
+    with fernetfile.open('test.txc', "rt", fernet_key=key, encoding="utf-8") as ff:
+        data = ff.read()
+
+    with fernetfile.open('test.txc', mode='wt', fernet_key=key, encoding="utf-8") as ff:
+        ff.writelines(data)
+
+    with fernetfile.open('test.txc', "rt", fernet_key=key, encoding="utf-8") as ff:
+        data = ff.readlines()
+    ```
 
 ### Binary files
 
