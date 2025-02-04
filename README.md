@@ -62,7 +62,7 @@ Binary files :
         data = ff.read()
 ```
 
-## Use the xxxFile like interface
+## Use the FernetFile like interface
 
 ```
     import fernetfile
@@ -74,7 +74,7 @@ Binary files :
         data = ff.read()
 ```
 
-## Chain to compress and encrypt
+## Chain it to compress
 
 ```
     import fernetfile
@@ -108,7 +108,7 @@ Binary files :
         data = ff.read()
 ```
 
-## Chain to tar, compress and encrypt
+## Chain it to tar and compress
 
 ```
     import fernetfile
