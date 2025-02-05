@@ -13,19 +13,17 @@ orbs:
   codecov: codecov/codecov@5
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
+
+parameters:
+  python-version:
+    type: string
+    default: "3.12"
+
 jobs:
   build-and-test:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/executor-intro/ & https://circleci.com/docs/configuration-reference/#executor-job
     docker:
-      # Specify the version you desire here
-      # See:https://circleci.com/developer/images/image/cimg/python
-      - image: cimg/python:3.12
-
-    # Add steps to the job
-    # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
+      - image: cimg/python:<< pipeline.parameters.python-version >>
     steps:
-      # Checkout the code as the first step.
       - checkout
       - run:
           name: Install dependencies from pyproject.toml
@@ -34,28 +32,42 @@ jobs:
             pip install .[zstd]
             pip install .[test]
             pip install codecov-cli
-      #- python/install-packages:
-          #pkg-manager: pip
-          # app-dir: ~/project/package-directory/  # If your requirements.txt isn't in the root directory.
-          # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run:
           name: Run tests
-          # This assumes pytest is installed via the install-package step above
-          command: pytest --cov-report xml --junitxml=pytest.junit.xml -o junit_family=legacy
+          command: pytest --cov-report xml --junitxml=pytest.<< pipeline.parameters.python-version >>.junit.xml -o junit_family=legacy
       - run:
           name: Run ruff
-          command: ruff check --respect-gitignore --output-format junit --output-file ruff.junit.xml . || true
-      #~ - run:
-          #~ name: Upload coverage
-          #~ command: codecovcli do-upload
+          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< pipeline.parameters.python-version >>.junit.xml . || true
+      - run:
+          name: Upload tests result
+          command: codecovcli do-upload --report-type test_results --file pytest.<< pipeline.parameters.python-version >>.junit.xml --file ruff.<< pipeline.parameters.python-version >>.junit.xml
+
+  build-and-cov:
+    docker:
+      - image: cimg/python:<< pipeline.parameters.python-version >>
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies from pyproject.toml
+          command: |
+            pip install .
+            pip install .[zstd]
+            pip install .[test]
+            pip install codecov-cli
+      - run:
+          name: Run tests
+          command: pytest --cov-report xml --junitxml=pytest.<< pipeline.parameters.python-version >>.junit.xml -o junit_family=legacy
+      - run:
+          name: Run ruff
+          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< pipeline.parameters.python-version >>.junit.xml . || true
       - codecov/upload
       - run:
           name: Upload tests result
-          #~ command: codecovcli do-upload --report-type test_results --file pytest.junit.xml --file ruff.junit.xml
-          command: codecovcli do-upload --report-type test_results --file pytest.junit.xml --file ruff.junit.xml
+          command: codecovcli do-upload --report-type test_results --file pytest.<< pipeline.parameters.python-version >>.junit.xml --file ruff.<< pipeline.parameters.python-version >>.junit.xml
+
   testpypi_publish:
     docker:
-      - image: cimg/python:3.12
+      - image: cimg/python:<< pipeline.parameters.python-version >>
     steps:
       - checkout # checkout source code to working directory
       - run:
@@ -69,9 +81,10 @@ jobs:
       - run:
           name: Upload
           command: python3 -m twine upload --repository testpypi --verbose --user $TWINE_USERNAME --password $TWINE_PASSWORD dist/*
+
   pypi_publish:
     docker:
-      - image: cimg/python:3.12
+      - image: cimg/python:<< pipeline.parameters.python-version >>
     steps:
       - checkout # checkout source code to working directory
       - run:
@@ -86,13 +99,17 @@ jobs:
           name: Upload
           command: python3 -m twine upload --verbose --user $TWINE_USERNAME --password $TWINE_PROD_PASSWORD dist/*
 
-# Orchestrate jobs using workflow
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
 workflows:
-  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  sample:
     jobs:
       - build-and-test
+          matrix:
+            parameters:
+                python-version : ['3.8', '3.9', '3.10', '3.11', '3.13']
+      - build-and-cov
+          matrix:
+            parameters:
+                python-version : ['3.12']
 #      - testpypi_publish:
 #          requires:
 #            - build-and-test
