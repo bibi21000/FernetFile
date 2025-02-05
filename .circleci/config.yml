@@ -14,15 +14,13 @@ orbs:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 
-parameters:
-  python:
-    type: string
-    default: "3.12"
-
 jobs:
   build-and-test:
+    parameters:
+      python:
+        type: string
     docker:
-      - image: cimg/python:<< pipeline.parameters.python >>
+      - image: cimg/python:<< parameters.python >>
     steps:
       - checkout
       - run:
@@ -34,17 +32,20 @@ jobs:
             pip install codecov-cli
       - run:
           name: Run tests
-          command: pytest --cov-report xml --junitxml=pytest.<< pipeline.parameters.python >>.junit.xml -o junit_family=legacy
+          command: pytest --cov-report xml --junitxml=pytest.<< parameters.python >>.junit.xml -o junit_family=legacy
       - run:
           name: Run ruff
-          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< pipeline.parameters.python >>.junit.xml . || true
+          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< parameters.python >>.junit.xml . || true
       - run:
           name: Upload tests result
-          command: codecovcli do-upload --report-type test_results --file pytest.<< pipeline.parameters.python >>.junit.xml --file ruff.<< pipeline.parameters.python >>.junit.xml
+          command: codecovcli do-upload --report-type test_results --file pytest.<< parameters.python >>.junit.xml --file ruff.<< parameters.python >>.junit.xml
 
   build-and-cov:
+    parameters:
+      python:
+        type: string
     docker:
-      - image: cimg/python:<< pipeline.parameters.python >>
+      - image: cimg/python:<< parameters.python >>
     steps:
       - checkout
       - run:
@@ -56,18 +57,21 @@ jobs:
             pip install codecov-cli
       - run:
           name: Run tests
-          command: pytest --cov-report xml --junitxml=pytest.<< pipeline.parameters.python >>.junit.xml -o junit_family=legacy
+          command: pytest --cov-report xml --junitxml=pytest.<< parameters.python >>.junit.xml -o junit_family=legacy
       - run:
           name: Run ruff
-          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< pipeline.parameters.python >>.junit.xml . || true
+          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< parameters.python >>.junit.xml . || true
       - codecov/upload
       - run:
           name: Upload tests result
-          command: codecovcli do-upload --report-type test_results --file pytest.<< pipeline.parameters.python >>.junit.xml --file ruff.<< pipeline.parameters.python >>.junit.xml
+          command: codecovcli do-upload --report-type test_results --file pytest.<< parameters.python >>.junit.xml --file ruff.<< parameters.python >>.junit.xml
 
   testpypi_publish:
+    parameters:
+      python:
+        type: string
     docker:
-      - image: cimg/python:<< pipeline.parameters.python >>
+      - image: cimg/python:<< parameters.python >>
     steps:
       - checkout # checkout source code to working directory
       - run:
@@ -83,6 +87,9 @@ jobs:
           command: python3 -m twine upload --repository testpypi --verbose --user $TWINE_USERNAME --password $TWINE_PASSWORD dist/*
 
   pypi_publish:
+    parameters:
+      python:
+        type: string
     docker:
       - image: cimg/python:<< pipeline.parameters.python >>
     steps:
