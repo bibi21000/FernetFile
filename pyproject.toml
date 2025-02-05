@@ -52,7 +52,7 @@ doc = ["pdoc"]
 HomePage = "https://github.com/bibi21000/FernetFile"
 Issues = "https://github.com/bibi21000/FernetFile/issues"
 Changelog = "https://github.com/bibi21000/FernetFile/blob/master/CHANGELOG.md"
-Documentation = "https://github.com/bibi21000/FernetFile/blob/master/docs/index.html"
+Documentation = "https://bibi21000.github.io/FernetFile/fernetfile.html"
 
 [build-system]
 requires = ["hatchling"]
