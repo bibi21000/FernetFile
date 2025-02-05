@@ -15,14 +15,14 @@ orbs:
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 
 parameters:
-  python-version:
+  python:
     type: string
     default: "3.12"
 
 jobs:
   build-and-test:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: cimg/python:<< parameters.python >>
     steps:
       - checkout
       - run:
@@ -34,17 +34,17 @@ jobs:
             pip install codecov-cli
       - run:
           name: Run tests
-          command: pytest --cov-report xml --junitxml=pytest.<< pipeline.parameters.python-version >>.junit.xml -o junit_family=legacy
+          command: pytest --cov-report xml --junitxml=pytest.<< parameters.python >>.junit.xml -o junit_family=legacy
       - run:
           name: Run ruff
-          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< pipeline.parameters.python-version >>.junit.xml . || true
+          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< parameters.python >>.junit.xml . || true
       - run:
           name: Upload tests result
-          command: codecovcli do-upload --report-type test_results --file pytest.<< pipeline.parameters.python-version >>.junit.xml --file ruff.<< pipeline.parameters.python-version >>.junit.xml
+          command: codecovcli do-upload --report-type test_results --file pytest.<< parameters.python >>.junit.xml --file ruff.<< parameters.python >>.junit.xml
 
   build-and-cov:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: cimg/python:<< parameters.python >>
     steps:
       - checkout
       - run:
@@ -56,18 +56,18 @@ jobs:
             pip install codecov-cli
       - run:
           name: Run tests
-          command: pytest --cov-report xml --junitxml=pytest.<< pipeline.parameters.python-version >>.junit.xml -o junit_family=legacy
+          command: pytest --cov-report xml --junitxml=pytest.<< parameters.python >>.junit.xml -o junit_family=legacy
       - run:
           name: Run ruff
-          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< pipeline.parameters.python-version >>.junit.xml . || true
+          command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< parameters.python >>.junit.xml . || true
       - codecov/upload
       - run:
           name: Upload tests result
-          command: codecovcli do-upload --report-type test_results --file pytest.<< pipeline.parameters.python-version >>.junit.xml --file ruff.<< pipeline.parameters.python-version >>.junit.xml
+          command: codecovcli do-upload --report-type test_results --file pytest.<< parameters.python >>.junit.xml --file ruff.<< parameters.python >>.junit.xml
 
   testpypi_publish:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: cimg/python:<< pipeline.parameters.python >>
     steps:
       - checkout # checkout source code to working directory
       - run:
@@ -84,7 +84,7 @@ jobs:
 
   pypi_publish:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: cimg/python:<< pipeline.parameters.python >>
     steps:
       - checkout # checkout source code to working directory
       - run:
