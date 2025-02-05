@@ -11,10 +11,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Update classifiers
-
 ### Removed
 
+
+## [0.0.6] - 2025-02-05
+
+### Changed
+
+- Update classifiers
 
 ## [0.0.5] - 2025-02-05
 
