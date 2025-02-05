@@ -11,12 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Update classifiers
+
 ### Removed
 
 
 ## [0.0.5] - 2025-02-05
-
-### Added
 
 ### Changed
 
@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Update doc
 
 ### Removed
+
 - Support for python 3.8
 - Support for python 3.13 (codecov-cli not compatible)
 
