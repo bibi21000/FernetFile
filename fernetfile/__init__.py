@@ -660,7 +660,7 @@ def open(filename, mode="rb", fernet_key=None,
                 if sys.flags.utf8_mode:
                     return "utf-8"
                 return "locale"
-        encoding = io.text_encoding(encoding)
+        encoding = text_encoding(encoding)
         return io.TextIOWrapper(binary_file, encoding, errors, newline)
     else:
         return binary_file
