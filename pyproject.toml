@@ -1,6 +1,6 @@
 [project]
 name = "fernetfile"
-version = "0.0.6"
+version = "0.0.7"
 requires-python = ">= 3.9"
 readme = "README.md"
 description = "A python xxxFile like ( ie GzipFile, BZ2File, ...) for manipulating Fernet encrypted files."
@@ -52,7 +52,7 @@ doc = ["pdoc"]
 HomePage = "https://github.com/bibi21000/FernetFile"
 Issues = "https://github.com/bibi21000/FernetFile/issues"
 Changelog = "https://github.com/bibi21000/FernetFile/blob/master/CHANGELOG.md"
-Documentation = "https://bibi21000.github.io/FernetFile/fernetfile.html"
+Documentation = "https://bibi21000.github.io/FernetFile/"
 
 [build-system]
 requires = ["hatchling"]

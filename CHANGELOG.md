@@ -9,13 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Test for encrypting existing file
-- Add documentation
-
 ### Changed
 
 ### Removed
 
+## [0.0.7] - 2025-02-05
+
+### Added
+
+- Test for encrypting existing file
+- Add documentation
+- Remove unused mtime parameter
 
 ## [0.0.6] - 2025-02-05
 
