@@ -24,7 +24,6 @@ A python xxxFile like (ie GzipFile, BZ2File, ...) for encrypting files with Fern
 
     key = Fernet.generate_key()
 ```
-
 and store it in a safe place (disk, database, ...).
 
 This key is essential to encrypt and decrypt data.
@@ -160,7 +159,6 @@ Binary files :
 ## Encrypt / decrypt existing files
 
 Encrypt :
-
 ```
     import fernetfile
 
@@ -173,7 +171,6 @@ Encrypt :
 ```
 
 Decrypt :
-
 ```
     import fernetfile
 
