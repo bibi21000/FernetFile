@@ -329,7 +329,7 @@ class FernetFile(BaseStream):
     myfileobj = None
 
     def __init__(self, filename=None, mode=None,
-            fernet_key=None, fileobj=None, mtime=None,
+            fernet_key=None, fileobj=None,
             chunk_size=CHUNK_SIZE, write_buffer_size=WRITE_BUFFER_SIZE):
         """Constructor for the FernetFile class.
 
@@ -354,11 +354,6 @@ class FernetFile(BaseStream):
         'wb', 'a' and 'ab', and 'x' and 'xb'.
 
         The fernet_key argument is the Fernet key used to crypt/decrypt data.
-
-        The optional mtime argument is the timestamp requested by gzip. The time
-        is in Unix format, i.e., seconds since 00:00:00 UTC, January 1, 1970.
-        If mtime is omitted or None, the current time is used. Use mtime = 0
-        to generate a compressed stream that does not depend on creation time.
 
         Encryption is done by chunks to reduce memory footprint. The default
         chunk_size is 64KB.
@@ -401,7 +396,6 @@ class FernetFile(BaseStream):
             self.mode = WRITE
             self._init_write(filename)
             self.crypt = FernetCryptor(fernet_key, chunk_size=self.chunk_size)
-            self._write_mtime = mtime
             self._buffer_size = write_buffer_size
             self._buffer = io.BufferedWriter(_WriteBufferStream(self),
                                              buffer_size=self._buffer_size)
