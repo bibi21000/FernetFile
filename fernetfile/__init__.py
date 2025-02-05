@@ -651,6 +651,15 @@ def open(filename, mode="rb", fernet_key=None,
         raise TypeError("filename must be a str or bytes object, or a file")
 
     if "t" in mode:
+        if hasattr(io, "text_encoding"):
+            text_encoding = io.text_encoding
+        else:
+            def text_encoding(encoding) -> str:
+                if encoding is not None:
+                    return encoding
+                if sys.flags.utf8_mode:
+                    return "utf-8"
+                return "locale"
         encoding = io.text_encoding(encoding)
         return io.TextIOWrapper(binary_file, encoding, errors, newline)
     else:
