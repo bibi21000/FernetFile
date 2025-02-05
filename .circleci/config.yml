@@ -112,7 +112,6 @@ workflows:
       - build-and-test:
           matrix:
             parameters:
-                type: string
                 python : ['3.8', '3.9', '3.10', '3.11', '3.13']
       - build-and-cov:
           matrix:
