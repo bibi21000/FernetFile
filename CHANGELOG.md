@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Test for encrypting existing file
+- Add documentation
+
 ### Changed
 
 ### Removed

@@ -1,10 +1,7 @@
 # -*- encoding: utf-8 -*-
 """Functions that read and write fernet encrypted files.
 
-The user of the file doesn't have to worry about the encryption,
-but random access is not allowed.
-
-based on Andrew Kuchling's minigzip.py distributed with the zlib module
+Based on Andrew Kuchling's minigzip.py distributed with the zlib module
 and on https://stackoverflow.com/questions/69312922/how-to-encrypt-large-file-using-python#71243173
 
 
@@ -365,10 +362,6 @@ class FernetFile(BaseStream):
 
         Encryption is done by chunks to reduce memory footprint. The default
         chunk_size is 64KB.
-
-        Encryption is done by chunks to reduce memory footprint. The default
-        chunk_size is 64KB.
-
         """
         self.chunk_size = chunk_size
         if self.chunk_size != CHUNK_SIZE and write_buffer_size == WRITE_BUFFER_SIZE:
@@ -526,6 +519,7 @@ class FernetFile(BaseStream):
                 myfileobj.close()
 
     def flush(self):
+        """Flush buffers to disk."""
         self._check_not_closed()
         if self.mode == WRITE:
             self._buffer.flush()
@@ -604,6 +598,12 @@ class FernetFile(BaseStream):
         return self.offset
 
     def readline(self, size=-1):
+        """Read a line of uncompressed bytes from the file.
+
+        The terminating newline (if present) is retained. If size is
+        non-negative, no more than size bytes will be read (in which
+        case the line may be incomplete). Returns b'' if already at EOF.
+        """
         self._check_not_closed()
         return self._buffer.readline(size)
 

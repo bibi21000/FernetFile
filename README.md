@@ -156,3 +156,31 @@ Binary files :
         fdata1 = ff.extractfile('file1.out')
         fdata2 = ff.extractfile('file2.out')
 ```
+
+## Encrypt / decrypt existing files
+
+Encrypt :
+
+```
+    import fernetfile
+
+    with open(source, 'rb') as fin, fernetfile.open(destination, mode='wb', fernet_key=key) as fout:
+        while True:
+            data = fin.read(7777)
+            if not data:
+                break
+            fout.write(data)
+```
+
+Decrypt :
+
+```
+    import fernetfile
+
+    with fernetfile.open(source, mode='rb', fernet_key=key) as fin, open(destination, 'wb') as fout :
+        while True:
+            data = fin.read(8888)
+            if not data:
+                break
+            fout.write(data)
+```

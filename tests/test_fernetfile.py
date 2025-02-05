@@ -279,3 +279,31 @@ def test_peek(random_path):
         data = ff.peek(128)
         assert datar == data
 
+def test_files_encrypt(random_path):
+
+    key = Fernet.generate_key()
+
+    datafsrc = os.path.join(random_path, 'test.dat')
+    dataftgt = os.path.join(random_path, 'test.dtc')
+    datafdec = os.path.join(random_path, 'test.dec')
+
+    with open(datafsrc, 'wb') as f:
+        for i in range(1024):
+            f.write(randbytes(1024 * 5))
+
+    with open(datafsrc, 'rb') as fin, fernetfile.open(dataftgt, mode='wb', fernet_key=key) as fout:
+        while True:
+            data = fin.read(7777)
+            if not data:
+                break
+            fout.write(data)
+
+    with fernetfile.open(dataftgt, mode='rb', fernet_key=key) as fin, open(datafdec, 'wb') as fout :
+        while True:
+            data = fin.read(8888)
+            if not data:
+                break
+            fout.write(data)
+
+    with open(datafsrc, 'rb') as f1, open(datafdec, 'rb') as f2:
+        assert f1.read() == f2.read()

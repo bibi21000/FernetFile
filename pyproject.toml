@@ -46,11 +46,13 @@ test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
 build = ["build", 'twine']
 zstd = ["pyzstd"]
 benchmark = ["pytest-ordering"]
+doc = ["pdoc"]
 
 [project.urls]
 HomePage = "https://github.com/bibi21000/FernetFile"
 Issues = "https://github.com/bibi21000/FernetFile/issues"
 Changelog = "https://github.com/bibi21000/FernetFile/blob/master/CHANGELOG.md"
+Documentation = "https://github.com/bibi21000/FernetFile/blob/master/docs/index.html"
 
 [build-system]
 requires = ["hatchling"]
