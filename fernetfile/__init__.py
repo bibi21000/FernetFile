@@ -654,6 +654,7 @@ def open(filename, mode="rb", fernet_key=None,
         if hasattr(io, "text_encoding"):
             text_encoding = io.text_encoding
         else:
+            # For python 3.9
             def text_encoding(encoding) -> str:
                 if encoding is not None:
                     return encoding
