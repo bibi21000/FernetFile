@@ -30,7 +30,7 @@ and store it in a safe place (disk, database, ...).
 This key is essential to encrypt and decrypt data.
 Losing this key means losing the data.
 
-## "open" your crytpted files like normal files
+## "open" your encrypted files like normal files
 
 Text files :
 
@@ -82,13 +82,13 @@ Binary files :
 
     class Bz2FernetFile(bz2.BZ2File):
 
-        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, \**kwargs):
+        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
             compresslevel = kwargs.pop('compresslevel', 9)
             self.fernet_file = fernetfile.FernetFile(name, mode,
-                fernet_key=fernet_key, chunk_size=chunk_size, \**kwargs)
+                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
             try:
                 super().__init__(self.fernet_file, mode=mode,
-                    compresslevel=compresslevel, \**kwargs)
+                    compresslevel=compresslevel, **kwargs)
             except Exception:
                 self.fernet_file.close()
                 raise
@@ -141,18 +141,18 @@ Binary files :
                 super().close()
             finally:
                 try:
-                    if self.fernet_file is not None:
+                    if self.zstd_file is not None:
                         self.zstd_file.close()
                 finally:
                     if self.fernet_file is not None:
                         self.fernet_file.close()
 
 
-    with TarZstdFernetFile('test.bzc', mode='wb', fernet_key=key) as ff:
+    with TarZstdFernetFile('test.zsc', mode='wb', fernet_key=key) as ff:
         ff.add(dataf1, 'file1.out')
         ff.add(dataf2, 'file2.out')
 
-    with TarZstdFernetFile('test.bzc', mode='rb', fernet_key=key) as ff:
+    with TarZstdFernetFile('test.zsc', mode='rb', fernet_key=key) as ff:
         fdata1 = ff.extractfile('file1.out')
         fdata2 = ff.extractfile('file2.out')
 ```

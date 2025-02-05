@@ -65,7 +65,7 @@ try:
                 super().close()
             finally:
                 try:
-                    if self.fernet_file is not None:
+                    if self.zstd_file is not None:
                         self.zstd_file.close()
                 finally:
                     if self.fernet_file is not None:
