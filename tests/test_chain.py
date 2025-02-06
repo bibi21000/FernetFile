@@ -555,10 +555,10 @@ def test_crypt_zip(random_path, buff_size, file_size):
         ddataf2 = ff.read()
 
     # Problem with ZipFile
-    # ~ with pytest.raises(OSError):
-    with ZipFernetFile(dataf, mode='w', fernet_key=key) as ff:
-        ff.write(dataf1, arcname='file1.out')
-        ff.write(dataf2, arcname='file2.out')
+    with pytest.raises(OSError):
+        with ZipFernetFile(dataf, mode='w', fernet_key=key) as ff:
+            ff.write(dataf1, arcname='file1.out')
+            ff.write(dataf2, arcname='file2.out')
 
     # ~ os.unlink(dataf1)
     # ~ os.unlink(dataf2)
