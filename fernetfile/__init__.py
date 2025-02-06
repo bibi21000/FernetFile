@@ -324,9 +324,9 @@ class FernetFile(BaseStream):
 
     """
 
-    # Overridden with internal file object to be closed, if only a filename
-    # is passed in
     myfileobj = None
+    """ Overridden with internal file object to be closed, if only a filename
+    is passed in """
 
     def __init__(self, filename=None, mode=None,
             fernet_key=None, fileobj=None,
@@ -363,6 +363,8 @@ class FernetFile(BaseStream):
             write_buffer_size = 5 * self.chunk_size
         if mode and ('t' in mode or 'U' in mode):
             raise ValueError("Invalid mode: {!r}".format(mode))
+        if fernet_key is None:
+            raise ValueError("Invalid fernet_key: {!r}".format(None))
         if mode and 'b' not in mode:
             mode += 'b'
         if filename is None:
@@ -535,7 +537,7 @@ class FernetFile(BaseStream):
         beginning of the file
         '''
         if self.mode != READ:
-            raise OSError("Can't rewind in write mode")
+            raise io.UnsupportedOperation("Can't rewind in write mode")
         self._buffer.seek(0)
 
     def readable(self):
@@ -576,9 +578,9 @@ class FernetFile(BaseStream):
                 if whence == io.SEEK_CUR:
                     offset = self.offset + offset
                 else:
-                    raise ValueError('Seek from end not supported')
+                    raise io.UnsupportedOperation('Seek from end not supported')
             if offset < self.offset:
-                raise OSError('Negative seek in write mode')
+                raise io.UnsupportedOperation('Negative seek in write mode not supported')
             count = offset - self.offset
             chunk = b'\0' * self._buffer_size
             for i in range(count // self._buffer_size):

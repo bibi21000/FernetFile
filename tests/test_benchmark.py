@@ -14,7 +14,7 @@ from cryptography.fernet import Fernet
 import fernetfile
 
 import pytest
-from .test_chain import Bz2FernetFile, ZstdFernetFile, TarBz2FernetFile, TarZstdFernetFile
+from .test_chain import Bz2FernetFile, LzmaFernetFile, ZstdFernetFile, TarBz2FernetFile, TarZstdFernetFile, TarLzmaFernetFile
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
@@ -50,6 +50,10 @@ def test_benchmark_header(random_path):
     # ~ (Bz2FernetFile, 'rand', 1024 * 16, 1024 * 1024 * 1),
     # ~ (Bz2FernetFile, 'rand', 1024 * 16, 1024 * 1024 * 10),
     # ~ (Bz2FernetFile, 'rand', 1024 * 16, 1024 * 1024 * 100),
+    (LzmaFernetFile, 'download.html', 1024 * 16, 0),
+    (LzmaFernetFile, 'genindex-all.html', 1024 * 16, 0),
+    (LzmaFernetFile, 'searchindex.js', 1024 * 16, 0),
+    (LzmaFernetFile, 'library.pdf', 1024 * 16, 0),
     (ZstdFernetFile, 'download.html', 1024 * 16, 0),
     (ZstdFernetFile, 'genindex-all.html', 1024 * 16, 0),
     (ZstdFernetFile, 'searchindex.js', 1024 * 16, 0),
@@ -77,6 +81,10 @@ def test_benchmark_header(random_path):
     (Bz2FernetFile, 'genindex-all.html', 1024 * 256, 0),
     (Bz2FernetFile, 'searchindex.js', 1024 * 256, 0),
     (Bz2FernetFile, 'library.pdf', 1024 * 256, 0),
+    (LzmaFernetFile, 'download.html', 1024 * 256, 0),
+    (LzmaFernetFile, 'genindex-all.html', 1024 * 256, 0),
+    (LzmaFernetFile, 'searchindex.js', 1024 * 256, 0),
+    (LzmaFernetFile, 'library.pdf', 1024 * 256, 0),
     # ~ (Bz2FernetFile, 'rand', 1024 * 256, 1024 * 1024 * 1),
     # ~ (Bz2FernetFile, 'rand', 1024 * 256, 1024 * 1024 * 10),
     # ~ (Bz2FernetFile, 'rand', 1024 * 256, 1024 * 1024 * 100),
@@ -104,6 +112,10 @@ def test_benchmark_header(random_path):
     (Bz2FernetFile, 'genindex-all.html', 1024 * 1024, 0),
     (Bz2FernetFile, 'searchindex.js', 1024 * 1024, 0),
     (Bz2FernetFile, 'library.pdf', 1024 * 1024, 0),
+    (LzmaFernetFile, 'download.html', 1024 * 1024, 0),
+    (LzmaFernetFile, 'genindex-all.html', 1024 * 1024, 0),
+    (LzmaFernetFile, 'searchindex.js', 1024 * 1024, 0),
+    (LzmaFernetFile, 'library.pdf', 1024 * 1024, 0),
     (ZstdFernetFile, 'download.html', 1024 * 1024, 0),
     (ZstdFernetFile, 'genindex-all.html', 1024 * 1024, 0),
     (ZstdFernetFile, 'searchindex.js', 1024 * 1024, 0),
@@ -148,6 +160,9 @@ def test_benchmark(random_path, fcls, dt, buff_size, file_size):
     (TarZstdFernetFile, 'html,js and pdf', 1024 * 16, 0),
     (TarZstdFernetFile, 'html,js and pdf', 1024 * 256, 0),
     (TarZstdFernetFile, 'html,js and pdf', 1024 * 1024, 0),
+    (TarLzmaFernetFile, 'html,js and pdf', 1024 * 16, 0),
+    (TarLzmaFernetFile, 'html,js and pdf', 1024 * 256, 0),
+    (TarLzmaFernetFile, 'html,js and pdf', 1024 * 1024, 0),
 ])
 def test_benchmark_tar(random_path, fcls, dt, buff_size, file_size):
     key = Fernet.generate_key()

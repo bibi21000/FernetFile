@@ -208,6 +208,10 @@ def test_bad_mode(random_path):
         with fernetfile.open(None, mode='wb', fernet_key=key) as ff:
             ff.write(data)
 
+    with pytest.raises(ValueError):
+        with fernetfile.open(dataf, mode='wb', fernet_key=None) as ff:
+            ff.write(data)
+
 def test_fernetfile(random_path):
     key = Fernet.generate_key()
     data = randbytes(128)

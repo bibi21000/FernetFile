@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Test for lzma
+- Failing test for gzip : io.UnsupportedOperation: Negative seek in write mode not supported
+- Failing tests for tar append ... normal
+
 ### Changed
+
+- Change raised exceptions to io.* ones
 
 ### Removed
 
