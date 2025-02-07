@@ -29,17 +29,12 @@ try:
         def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
             level_or_option = kwargs.pop('level_or_option', None)
             zstd_dict = kwargs.pop('zstd_dict', None)
-            self.fernet_file = fernetfile.FernetFile(name, mode,
-                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
+            self.fernet_file = ZstdFernetFile(name, mode,
+                fernet_key=fernet_key, chunk_size=chunk_size,
+                    level_or_option=level_or_option, zstd_dict=zstd_dict,
+                    **kwargs)
             try:
-                self.zstd_file = pyzstd.ZstdFile(self.fernet_file, mode=mode,
-                    level_or_option=level_or_option, zstd_dict=zstd_dict, **kwargs)
-                try:
-                    super().__init__(fileobj=self.zstd_file, mode=mode, **kwargs)
-
-                except Exception:
-                    self.zstd_file.close()
-                    raise
+                super().__init__(fileobj=self.fernet_file, mode=mode, **kwargs)
 
             except Exception:
                 self.fernet_file.close()
@@ -48,13 +43,10 @@ try:
         def close(self):
             try:
                 super().close()
+
             finally:
-                try:
-                    if self.zstd_file is not None:
-                        self.zstd_file.close()
-                finally:
-                    if self.fernet_file is not None:
-                        self.fernet_file.close()
+                if self.fernet_file is not None:
+                    self.fernet_file.close()
 
 except ModuleNotFoundError:
     ZSTD = False
