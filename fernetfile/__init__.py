@@ -5,6 +5,8 @@ Based on Andrew Kuchling's minigzip.py distributed with the zlib module
 and on https://stackoverflow.com/questions/69312922/how-to-encrypt-large-file-using-python#71243173
 
 
+`fernetfile.zstd`
+
 """
 __license__ = """
     All rights reserved by Labo-Online

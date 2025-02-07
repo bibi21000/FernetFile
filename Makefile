@@ -14,7 +14,7 @@ testpypi:
 	./venv/bin/python3 -m twine upload --repository testpypi --verbose dist/*
 
 doc:
-	./venv/bin/pdoc --output-directory docs fernetfile
+	./venv/bin/pdoc --output-directory docs fernetfile/zstd.py fernetfile/__init__.py
 
 pypi:
 	./venv/bin/python3 -m twine upload --repository pypi --verbose dist/*
