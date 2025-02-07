@@ -4,10 +4,12 @@
 
 # FernetFile
 
-A python xxxFile like (ie GzipFile, BZ2File, ...) for encrypting files with Fernet.
+A python xxxFile like (ie TarFile, GzipFile, BZ2File, pyzstd.ZstdFile, ...)
+for encrypting files with Fernet.
 
  - encrypting / decrypting data using chunks to reduce memory footprint
  - chainable with other python xxxFile interfaces (stream mode)
+ - interface to compress/encrypt and decrypt/decompress (with pyzstd) in stream mode
  - look at BENCHMARK.md ... and chain :)
  - look at tests for examples
 
