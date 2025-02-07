@@ -56,7 +56,7 @@ try:
               - compressionLevel
               - nbWorkers
 
-            Look at `pyzstd documentation <https://pyzstd.readthedocs.io/en/stable/#advanced-parameters>`__
+            Look at `pyzstd documentation <https://pyzstd.readthedocs.io/en/stable/#advanced-parameters>`_
             """
             chunk_size = kwargs.pop('chunk_size', fernetfile.CHUNK_SIZE)
             self.fernet_file = fernetfile.FernetFile(name, mode,
@@ -110,7 +110,7 @@ try:
           - compressionLevel
           - nbWorkers
 
-        Look at `pyzstd documentation <https://pyzstd.readthedocs.io/en/stable/#advanced-parameters>`__
+        Look at `pyzstd documentation <https://pyzstd.readthedocs.io/en/stable/#advanced-parameters>`_
 
         """
         if "t" in mode:
