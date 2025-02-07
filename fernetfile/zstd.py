@@ -10,11 +10,16 @@ __copyright__ = "Copyright ©2024-2025 "
 __author__ = 'bibi21000 aka Sébastien GALLET'
 __email__ = 'bibi21000@gmail.com'
 
+import os
+import sys
+import io
+
 import fernetfile
 
 try:
     import pyzstd
     from pyzstd import CParameter, DParameter # noqa F401
+
     class FernetFile(pyzstd.ZstdFile):
 
         def __init__(self, name, mode='r', fernet_key=None, level_or_option=None, zstd_dict=None, **kwargs):
@@ -46,7 +51,7 @@ try:
             chunk_size is 64KB.
 
             level_or_option is a dict for ztsd compressions.
-            2 parameters are importants for performances and cpu usage :
+            2 parameters are importants for performances and cpu usage when writing:
 
               - compressionLevel
               - nbWorkers
@@ -69,6 +74,76 @@ try:
             finally:
                 if self.fernet_file is not None:
                     self.fernet_file.close()
+
+    def open(filename, mode="rb", fernet_key=None,
+            encoding=None, errors=None, newline=None,
+            chunk_size=fernetfile.CHUNK_SIZE,
+            level_or_option=None, zstd_dict=None):
+        """Open a ZstdFernet file in binary or text mode.
+
+        The filename argument can be an actual filename (a str or bytes object), or
+        an existing file object to read from or write to.
+
+        The mode argument can be "r", "rb", "w", "wb", "x", "xb", "a" or "ab" for
+        binary mode, or "rt", "wt", "xt" or "at" for text mode. The default mode is
+        "rb".
+
+        For binary mode, this function is equivalent to the FernetFile constructor:
+        FernetFile(filename, mode, fernet_key). In this case, the encoding, errors
+        and newline arguments must not be provided.
+
+        For text mode, a FernetFile object is created, and wrapped in an
+        io.TextIOWrapper instance with the specified encoding, error handling
+        behavior, and line ending(s).
+
+        Encryption is done by chunks to reduce memory footprint. The default
+        chunk_size is 64KB.
+
+        level_or_option is a dict for ztsd compressions.
+        2 parameters are importants for performances and cpu usage when writing :
+
+          - compressionLevel
+          - nbWorkers
+
+        Look at `pyzstd documentation <https://pyzstd.readthedocs.io/en/stable/#advanced-parameters>`__
+
+        """
+        if "t" in mode:
+            if "b" in mode:
+                raise ValueError("Invalid mode: %r" % (mode,))
+        else:
+            if encoding is not None:
+                raise ValueError("Argument 'encoding' not supported in binary mode")
+            if errors is not None:
+                raise ValueError("Argument 'errors' not supported in binary mode")
+            if newline is not None:
+                raise ValueError("Argument 'newline' not supported in binary mode")
+
+        frnt_mode = mode.replace("t", "")
+        if isinstance(filename, (str, bytes, os.PathLike)):
+            binary_file = FernetFile(filename, mode=frnt_mode, fernet_key=fernet_key, chunk_size=chunk_size,
+                level_or_option=level_or_option, zstd_dict=zstd_dict)
+        elif hasattr(filename, "read") or hasattr(filename, "write"):
+            binary_file = FernetFile(None, mode=frnt_mode, fernet_key=fernet_key, fileobj=filename,
+                chunk_size=chunk_size, level_or_option=level_or_option, zstd_dict=zstd_dict)
+        else:
+            raise TypeError("filename must be a str or bytes object, or a file")
+
+        if "t" in mode:
+            if hasattr(io, "text_encoding"):
+                text_encoding = io.text_encoding
+            else:
+                # For python 3.9
+                def text_encoding(encoding) -> str:
+                    if encoding is not None:
+                        return encoding
+                    if sys.flags.utf8_mode:
+                        return "utf-8"
+                    return "locale"
+            encoding = text_encoding(encoding)
+            return io.TextIOWrapper(binary_file, encoding, errors, newline)
+        else:
+            return binary_file
 
 
 except ModuleNotFoundError:

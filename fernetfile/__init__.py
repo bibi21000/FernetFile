@@ -1,11 +1,9 @@
 # -*- encoding: utf-8 -*-
-"""Functions that read and write fernet encrypted files.
+"""
 
-Based on Andrew Kuchling's minigzip.py distributed with the zlib module
-and on https://stackoverflow.com/questions/69312922/how-to-encrypt-large-file-using-python#71243173
+.. include:: ../README.md
+   :start-line: 1
 
-
-`fernetfile.zstd`
 
 """
 __license__ = """
@@ -323,6 +321,8 @@ class FernetFile(BaseStream):
     the exception of the truncate() method.
 
     This class only supports opening files in binary mode.
+
+    `fernetfile.zstd`
 
     """
 

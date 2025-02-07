@@ -65,16 +65,32 @@ Binary files :
 ## Use the FernetFile interface
 
 ```
-    import fernetfile
+    from fernetfile import FernetFile
 
-    with fernetfile.FernetFile('test.dac', mode='wb', fernet_key=key) as ff:
+    with FernetFile('test.dac', mode='wb', fernet_key=key) as ff:
         ff.write(data)
 
-    with fernetfile.FernetFile('test.dac', mode='rb', fernet_key=key) as ff:
+    with FernetFile('test.dac', mode='rb', fernet_key=key) as ff:
         data = ff.read()
 ```
 
-## Chain it to bz2
+## Or the fast and furious FernetFile with zstd compression
+
+```
+    pip install fernetfile[zstd]
+```
+
+```
+    from fernetfile.zstd import FernetFile
+
+    with FernetFile('test.dac', mode='wb', fernet_key=key) as ff:
+        ff.write(data)
+
+    with FernetFile('test.dac', mode='rb', fernet_key=key) as ff:
+        data = ff.read()
+```
+
+## Or chain it to bz2
 
 ```
     import fernetfile
@@ -108,7 +124,7 @@ Binary files :
         data = ff.read()
 ```
 
-## Chain it to tar and pyzstd
+## And chain it to tar and pyzstd
 
 ```
     import fernetfile

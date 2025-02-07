@@ -22,7 +22,7 @@ try:
     import pyzstd
     ZSTD = True
 
-    from fernetfile.zstd import FernetFile as ZstdFernetFile
+    from fernetfile.zstd import FernetFile as ZstdFernetFile, open as zstd_open
 
     class TarZstdFernetFile(tarfile.TarFile):
 
@@ -156,3 +156,97 @@ def test_crypt_zstd_tar_append(random_path, buff_size, file_size):
         # ~ assert fdatae.read() == ddataf2
         # ~ fdatae = ff.extractfile('file3.out')
         # ~ assert fdatae.read() == ddataf3
+
+def test_zstd_encoding(random_path):
+    key = Fernet.generate_key()
+    datal = ["Ceci est un texte avec des accents : éè","avec plusieurs","lignes"]
+    data = "\n".join(datal)
+    dataf = os.path.join(random_path, 'test_encoding.frnt')
+
+    with zstd_open(dataf, mode='wt', fernet_key=key, encoding="utf-8") as ff:
+        ff.write(data)
+
+    with pytest.raises(ValueError):
+        with open(dataf, "r", encoding="utf-8") as ff:
+            datar = ff.read()
+        assert data != datar
+
+    with zstd_open(dataf, "rt", fernet_key=key, encoding="utf-8") as ff:
+        datar = ff.read()
+    assert data == datar
+
+    with zstd_open(dataf, "rt", fernet_key=key, encoding="utf-8") as ff:
+        datar = ff.read()
+    assert data == datar
+
+    with zstd_open(dataf, "rt", fernet_key=key, encoding="utf-8") as ff:
+        datar = ff.readline()
+        assert datal[0] + '\n' == datar
+        datar = ff.readline()
+        assert datal[1] + '\n' == datar
+        datar = ff.readline()
+        assert datal[2] == datar
+
+    datal = ["Ceci est un texte avec des accents : éè","avec plusieurs","lignes"]
+    dataf = os.path.join(random_path, 'test_encoding.frnt')
+
+    with zstd_open(dataf, mode='wt', fernet_key=key, encoding="utf-8") as ff:
+        ff.writelines(data)
+
+    with zstd_open(dataf, "rt", fernet_key=key, encoding="utf-8") as ff:
+        datar = ff.readlines()
+
+    assert datal[0] + '\n' == datar[0]
+    assert datal[1] + '\n' == datar[1]
+    assert datal[2] == datar[2]
+
+
+def test_files_zstd_encrypt(random_path):
+
+    key = Fernet.generate_key()
+
+    datafsrc = os.path.join(random_path, 'test.dat')
+    dataftgt = os.path.join(random_path, 'test.dtc')
+    datafdec = os.path.join(random_path, 'test.dec')
+
+    with open(datafsrc, 'wb') as f:
+        for i in range(1024):
+            f.write(randbytes(1024 * 5))
+
+    with open(datafsrc, 'rb') as fin, zstd_open(dataftgt, mode='wb', fernet_key=key) as fout:
+        while True:
+            data = fin.read(7777)
+            if not data:
+                break
+            fout.write(data)
+
+    with zstd_open(dataftgt, mode='rb', fernet_key=key) as fin, open(datafdec, 'wb') as fout :
+        while True:
+            data = fin.read(8888)
+            if not data:
+                break
+            fout.write(data)
+
+    with open(datafsrc, 'rb') as f1, open(datafdec, 'rb') as f2:
+        assert f1.read() == f2.read()
+
+@pytest.mark.parametrize("buff_size, file_size",
+    [
+        (1024 * 1, 1024 * 10), (1024 * 1, 1024 * 10 + 4), (1024 * 1, 1024 * 10 + 5),
+        (1024 * 10, 1024 * 10), (1024 * 10, 1024 * 10 + 7), (1024 * 10, 1024 * 10 + 3),
+        (1024 * 100, 1024 * 10), (1024 * 100, 1024 * 10 + 9), (1024 * 100, 1024 * 10 + 11),
+    ])
+def test_buffer(random_path, buff_size, file_size):
+    fernetfile.BUFFER_SIZE = buff_size
+    key = Fernet.generate_key()
+    data = randbytes(file_size)
+    dataf = os.path.join(random_path, 'test.frnt')
+    with zstd_open(dataf, mode='wb', fernet_key=key) as ff:
+        ff.write(data)
+    with open(dataf, "rb") as ff:
+        datar = ff.read()
+    assert data != datar
+    with zstd_open(dataf, "rb", fernet_key=key) as ff:
+        datar = ff.read()
+    fernetfile.BUFFER_SIZE = 1024 * 10
+    assert data == datar
