@@ -33,6 +33,7 @@
     <li><a href="#or-chain-it-to-bz2">Or chain it to bz2</a></li>
     <li><a href="#and-chain-it-to-tar-and-pyzstd">And chain it to tar and pyzstd</a></li>
     <li><a href="#encrypt-decrypt-existing-files">Encrypt / decrypt existing files</a></li>
+    <li><a href="#and-finally-encrypt-decrypt-existing-files-with-the-fast-and-furious-fernetfile-with-zstd-compression">And finally encrypt / decrypt existing files with the fast and furious FernetFile with zstd compression</a></li>
   </ul></li>
 </ul>
 
@@ -308,6 +309,32 @@ Losing this key means losing the data.</p>
 <pre><code>    import fernetfile
 
     with <a href="#open">fernetfile.open</a>(source, mode='rb', fernet_key=key) as fin, open(destination, 'wb') as fout :
+        while True:
+            data = fin.read(8888)
+            if not data:
+                break
+            fout.write(data)
+</code></pre>
+
+<h2 id="and-finally-encrypt-decrypt-existing-files-with-the-fast-and-furious-fernetfile-with-zstd-compression">And finally encrypt / decrypt existing files with the fast and furious FernetFile with zstd compression</h2>
+
+<p>Encrypt :</p>
+
+<pre><code>    import <a href="fernetfile/zstd.html">fernetfile.zstd</a>
+
+    with open(source, 'rb') as fin, <a href="fernetfile/zstd.html#open">fernetfile.zstd.open</a>(destination, mode='wb', fernet_key=key) as fout:
+        while True:
+            data = fin.read(7777)
+            if not data:
+                break
+            fout.write(data)
+</code></pre>
+
+<p>Decrypt :</p>
+
+<pre><code>    import <a href="fernetfile/zstd.html">fernetfile.zstd</a>
+
+    with <a href="fernetfile/zstd.html#open">fernetfile.zstd.open</a>(source, mode='rb', fernet_key=key) as fin, open(destination, 'wb') as fout :
         while True:
             data = fin.read(8888)
             if not data:
