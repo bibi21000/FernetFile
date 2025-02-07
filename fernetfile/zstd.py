@@ -68,6 +68,11 @@ try:
                 self.fernet_file.close()
                 raise
 
+        def __repr__(self):
+            s = repr(self.fileobj)
+            return '<ZstdFernetFile ' + s[1:-1] + ' ' + hex(id(self)) + '>'
+
+
         def close(self):
             try:
                 super().close()

@@ -14,9 +14,12 @@ from cryptography.fernet import Fernet
 import fernetfile
 
 import pytest
-from fernetfile.zstd import FernetFile as ZstdFernetFile, CParameter
+from fernetfile.zstd import FernetFile as _ZstdFernetFile, CParameter
 from .test_zstd import TarZstdFernetFile
 from .test_chain import Bz2FernetFile, LzmaFernetFile, TarBz2FernetFile, TarLzmaFernetFile
+
+class ZstdFernetFile(_ZstdFernetFile):
+    pass
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")

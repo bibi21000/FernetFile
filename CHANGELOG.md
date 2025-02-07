@@ -9,16 +9,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+## [0.0.8] - 2025-02-05
+
+### Added
+
 - Test for lzma
 - Failing test for gzip : io.UnsupportedOperation: Negative seek in write mode not supported
 - Failing tests for tar append ... normal
-- Add zstd FernetFile class and open function
+- Add fast and furious zstd FernetFile class and open function
 
 ### Changed
 
 - Change raised exceptions to io.* ones
-
-### Removed
 
 ## [0.0.7] - 2025-02-05
 

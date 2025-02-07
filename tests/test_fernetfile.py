@@ -172,6 +172,8 @@ def test_bad_mode(random_path):
     data = randbytes(128)
     dataf = os.path.join(random_path, 'test_bad_mode.frnt')
 
+    print(repr(fernetfile.FernetFile))
+
     with pytest.raises(ValueError):
         with fernetfile.FernetFile(dataf, mode='wbt', fernet_key=key) as ff:
             ff.write(data)
