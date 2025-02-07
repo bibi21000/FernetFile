@@ -15,7 +15,8 @@ import fernetfile
 
 import pytest
 from fernetfile.zstd import FernetFile as ZstdFernetFile, CParameter
-from .test_chain import Bz2FernetFile, LzmaFernetFile, TarBz2FernetFile, TarZstdFernetFile, TarLzmaFernetFile
+from .test_zstd import TarZstdFernetFile
+from .test_chain import Bz2FernetFile, LzmaFernetFile, TarBz2FernetFile, TarLzmaFernetFile
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
@@ -227,23 +228,23 @@ def test_benchmark_zstd_header(random_path):
 @pytest.mark.run(order=11)
 @pytest.mark.parametrize("fcls, dt, lvl, wrks", [
     (ZstdFernetFile, 'genindex-all.html', 9, 2),
-    (ZstdFernetFile, 'genindex-all.html', 9, 4),
     (ZstdFernetFile, 'genindex-all.html', 9, 8),
+    (ZstdFernetFile, 'genindex-all.html', 9, 12),
     (ZstdFernetFile, 'genindex-all.html', 19, 2),
-    (ZstdFernetFile, 'genindex-all.html', 19, 4),
     (ZstdFernetFile, 'genindex-all.html', 19, 8),
+    (ZstdFernetFile, 'genindex-all.html', 19, 12),
     (ZstdFernetFile, 'searchindex.js', 9, 2),
-    (ZstdFernetFile, 'searchindex.js', 9, 4),
     (ZstdFernetFile, 'searchindex.js', 9, 8),
+    (ZstdFernetFile, 'searchindex.js', 9, 12),
     (ZstdFernetFile, 'searchindex.js', 19, 2),
-    (ZstdFernetFile, 'searchindex.js', 19, 4),
     (ZstdFernetFile, 'searchindex.js', 19, 8),
+    (ZstdFernetFile, 'searchindex.js', 19, 12),
     (ZstdFernetFile, 'library.pdf', 9, 2),
-    (ZstdFernetFile, 'library.pdf', 9, 4),
     (ZstdFernetFile, 'library.pdf', 9, 8),
+    (ZstdFernetFile, 'library.pdf', 9, 12),
     (ZstdFernetFile, 'library.pdf', 19, 2),
-    (ZstdFernetFile, 'library.pdf', 19, 4),
     (ZstdFernetFile, 'library.pdf', 19, 8),
+    (ZstdFernetFile, 'library.pdf', 19, 12),
 ])
 def test_benchmark_zstd_tar(random_path, fcls, dt, lvl, wrks):
     key = Fernet.generate_key()
