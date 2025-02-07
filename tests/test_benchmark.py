@@ -14,7 +14,8 @@ from cryptography.fernet import Fernet
 import fernetfile
 
 import pytest
-from .test_chain import Bz2FernetFile, LzmaFernetFile, ZstdFernetFile, TarBz2FernetFile, TarZstdFernetFile, TarLzmaFernetFile
+from fernetfile.zstd import FernetFile as ZstdFernetFile, CParameter
+from .test_chain import Bz2FernetFile, LzmaFernetFile, TarBz2FernetFile, TarZstdFernetFile, TarLzmaFernetFile
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
@@ -197,4 +198,90 @@ def test_benchmark_tar(random_path, fcls, dt, buff_size, file_size):
         assert data == datar
     with open('BENCHMARK.md','at') as ff:
         ff.write("| %-20s | %-20s | %11.0f |  %10.0f | %10.0f | %10.2f%% | %6.2f | %6.2f |\n" % (("%s" % fcls).split('.')[-1][:-2], dt, buff_size / 1024, file_size / 1024, comp_size / 1024, comp_size / file_size * 100, time_write - time_start, time_read - time_write))
+
+
+@pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
+@pytest.mark.run(order=10)
+def test_benchmark_zstd_header(random_path):
+    with open('BENCHMARK.md','at') as ff:
+        ff.write("\n")
+        ff.write("\n")
+        ff.write("# Benchmarks ZstdFernetFile\n")
+        ff.write("\n")
+        ff.write("| Class                | Data                 | Lvl | Wrks |  Orig size  | Crypt size |  Comp ratio | WTime  | Rtime  |\n")
+        ff.write("|:---------------------|:---------------------|----:|-----:|------------:|-----------:|------------:|-------:|-------:|\n")
+    # ~ urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-pdf-a4.zip", "docpython.pdf.zip")
+    # ~ with zipfile.ZipFile('docpython.pdf.zip', 'r') as zip_ref:
+        # ~ zip_ref.extractall('.')
+    # ~ urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-html.zip", "docpython.html.zip")
+    # ~ with zipfile.ZipFile('docpython.html.zip', 'r') as zip_ref:
+        # ~ zip_ref.extractall('.')
+
+    (fernetfile.FernetFile, 'download.html', 1024 * 1024, 0),
+    (fernetfile.FernetFile, 'genindex-all.html', 1024 * 1024, 0),
+    (fernetfile.FernetFile, 'searchindex.js', 1024 * 1024, 0),
+    (fernetfile.FernetFile, 'library.pdf', 1024 * 1024, 0),
+
+# ~ @pytest.mark.skip("Manual test")
+@pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
+@pytest.mark.run(order=11)
+@pytest.mark.parametrize("fcls, dt, lvl, wrks", [
+    (ZstdFernetFile, 'genindex-all.html', 9, 2),
+    (ZstdFernetFile, 'genindex-all.html', 9, 4),
+    (ZstdFernetFile, 'genindex-all.html', 9, 8),
+    (ZstdFernetFile, 'genindex-all.html', 19, 2),
+    (ZstdFernetFile, 'genindex-all.html', 19, 4),
+    (ZstdFernetFile, 'genindex-all.html', 19, 8),
+    (ZstdFernetFile, 'searchindex.js', 9, 2),
+    (ZstdFernetFile, 'searchindex.js', 9, 4),
+    (ZstdFernetFile, 'searchindex.js', 9, 8),
+    (ZstdFernetFile, 'searchindex.js', 19, 2),
+    (ZstdFernetFile, 'searchindex.js', 19, 4),
+    (ZstdFernetFile, 'searchindex.js', 19, 8),
+    (ZstdFernetFile, 'library.pdf', 9, 2),
+    (ZstdFernetFile, 'library.pdf', 9, 4),
+    (ZstdFernetFile, 'library.pdf', 9, 8),
+    (ZstdFernetFile, 'library.pdf', 19, 2),
+    (ZstdFernetFile, 'library.pdf', 19, 4),
+    (ZstdFernetFile, 'library.pdf', 19, 8),
+])
+def test_benchmark_zstd_tar(random_path, fcls, dt, lvl, wrks):
+    key = Fernet.generate_key()
+    dataf = os.path.join(random_path, 'test.frnt')
+    time_start = time.time()
+    level_or_option = {
+        CParameter.compressionLevel : lvl,
+        CParameter.nbWorkers : wrks
+    }
+    key = Fernet.generate_key()
+    if dt == 'rand':
+        data = randbytes(file_size)
+    elif '.pdf' in dt:
+        fff = os.path.join('docs-pdf', dt)
+        with open(fff,'rb') as ff:
+            data = ff.read()
+        file_size = os.path.getsize(fff)
+    elif '.html' in dt or '.js' in dt:
+        fff = os.path.join('python-3.13-docs-html', dt)
+        with open(fff,'rb') as ff:
+            data = ff.read()
+        file_size = os.path.getsize(fff)
+    else:
+        data = dt * file_size
+    dataf = os.path.join(random_path, 'test.frnt')
+    time_start = time.time()
+    with fcls(dataf, mode='wb', fernet_key=key, level_or_option=level_or_option) as ff:
+        ff.write(data)
+    time_write = time.time()
+    level_or_option = {
+        # ~ DParameter.windowLogMax : 0,
+    }
+    with fcls(dataf, "rb", fernet_key=key, level_or_option=level_or_option) as ff:
+    # ~ with fcls(dataf, "rb", fernet_key=key) as ff:
+        datar = ff.read()
+    time_read = time.time()
+    assert data == datar
+    comp_size = os.path.getsize(dataf)
+    with open('BENCHMARK.md','at') as ff:
+        ff.write("| %-20s | %-20s | %3.0f | %4.0f |  %10.0f | %10.0f | %10.2f%% | %6.2f | %6.2f |\n" % (("%s" % fcls).split('.')[-1][:-2], dt, lvl, wrks, file_size / 1024, comp_size / 1024, comp_size / file_size * 100, time_write - time_start, time_read - time_write))
 

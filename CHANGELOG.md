@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Test for lzma
 - Failing test for gzip : io.UnsupportedOperation: Negative seek in write mode not supported
 - Failing tests for tar append ... normal
+- Add ZstdFernetFile
 
 ### Changed
 
