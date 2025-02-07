@@ -250,3 +250,48 @@ def test_buffer(random_path, buff_size, file_size):
         datar = ff.read()
     fernetfile.BUFFER_SIZE = 1024 * 10
     assert data == datar
+
+def test_zst_bad_mode(random_path):
+    key = Fernet.generate_key()
+    data = randbytes(128)
+    dataf = os.path.join(random_path, 'test_bad_mode.frnt')
+
+    with pytest.raises(ValueError):
+        with ZstdFernetFile(dataf, mode='wbt', fernet_key=key) as ff:
+            ff.write(data)
+
+    with pytest.raises(ValueError):
+        with ZstdFernetFile(dataf, mode='zzz', fernet_key=key) as ff:
+            ff.write(data)
+
+    with pytest.raises(FileNotFoundError):
+        with ZstdFernetFile(None, mode='wb', fernet_key=key) as ff:
+            ff.write(data)
+
+    with pytest.raises(FileNotFoundError):
+        with ZstdFernetFile(dataf, fernet_key=key) as ff:
+            data = ff.read()
+
+    with pytest.raises(ValueError):
+        with zstd_open(dataf, mode='wbt', fernet_key=key) as ff:
+            ff.write(data)
+
+    with pytest.raises(ValueError):
+        with zstd_open(dataf, mode='wb', fernet_key=key, encoding='utf-8') as ff:
+            ff.write(data)
+
+    with pytest.raises(ValueError):
+        with zstd_open(dataf, mode='wb', fernet_key=key, errors=True) as ff:
+            ff.write(data)
+
+    with pytest.raises(ValueError):
+        with zstd_open(dataf, mode='wb', fernet_key=key, newline='\n') as ff:
+            ff.write(data)
+
+    with pytest.raises(TypeError):
+        with zstd_open(None, mode='wb', fernet_key=key) as ff:
+            ff.write(data)
+
+    with pytest.raises(ValueError):
+        with zstd_open(dataf, mode='wb', fernet_key=None) as ff:
+            ff.write(data)
