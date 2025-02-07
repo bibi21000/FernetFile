@@ -128,11 +128,13 @@ fernetfile    </h1>
 
 <h1 id="fernetfile">FernetFile</h1>
 
-<p>A python xxxFile like (ie GzipFile, BZ2File, ...) for encrypting files with Fernet.</p>
+<p>A python xxxFile like (ie TarFile, GzipFile, BZ2File, pyzstd.ZstdFile, ...)
+for encrypting files with Fernet.</p>
 
 <ul>
 <li>encrypting / decrypting data using chunks to reduce memory footprint</li>
 <li>chainable with other python xxxFile interfaces (stream mode)</li>
+<li>interface to compress/encrypt and decrypt/decompress (with pyzstd) in stream mode</li>
 <li>look at BENCHMARK.md ... and chain :)</li>
 <li>look at tests for examples</li>
 </ul>
@@ -244,8 +246,7 @@ Losing this key means losing the data.</p>
 
 <h2 id="and-chain-it-to-tar-and-pyzstd">And chain it to tar and pyzstd</h2>
 
-<pre><code>    import fernetfile
-    import pyzstd
+<pre><code>    from <a href="fernetfile/zstd.html">fernetfile.zstd</a> import FernetFile
     import tarfile
 
     class TarZstdFernetFile(tarfile.TarFile):
@@ -253,17 +254,12 @@ Losing this key means losing the data.</p>
         def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
             level_or_option = kwargs.pop('level_or_option', None)
             zstd_dict = kwargs.pop('zstd_dict', None)
-            self.fernet_file = <a href="#FernetFile">fernetfile.FernetFile</a>(name, mode,
-                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
+            self.fernet_file = FernetFile(name, mode,
+                fernet_key=fernet_key, chunk_size=chunk_size,
+                    level_or_option=level_or_option, zstd_dict=zstd_dict,
+                    **kwargs)
             try:
-                self.zstd_file = pyzstd.ZstdFile(self.fernet_file, mode=mode,
-                    level_or_option=level_or_option, zstd_dict=zstd_dict, **kwargs)
-                try:
-                    super().__init__(fileobj=self.zstd_file, mode=mode, **kwargs)
-
-                except Exception:
-                    self.zstd_file.close()
-                    raise
+                super().__init__(fileobj=self.fernet_file, mode=mode, **kwargs)
 
             except Exception:
                 self.fernet_file.close()
@@ -272,14 +268,10 @@ Losing this key means losing the data.</p>
         def close(self):
             try:
                 super().close()
-            finally:
-                try:
-                    if self.zstd_file is not None:
-                        self.zstd_file.close()
-                finally:
-                    if self.fernet_file is not None:
-                        self.fernet_file.close()
 
+            finally:
+                if self.fernet_file is not None:
+                    self.fernet_file.close()
 
     with TarZstdFernetFile('test.zsc', mode='wb', fernet_key=key) as ff:
         ff.add(dataf1, 'file1.out')
