@@ -325,16 +325,22 @@ def test_benchmark_fstore_header(random_path):
 @pytest.mark.parametrize("dt, key, secure_open, secure_params, nb_doc", [
     ('genindex-all.html', Fernet.generate_key(), None, None, 5),
     ('genindex-all.html', Fernet.generate_key(), zstd_open, {'fernet_key':Fernet.generate_key()}, 5),
+    ('genindex-all.html', Fernet.generate_key(), fernetfile.open, {'fernet_key':Fernet.generate_key()}, 5),
     ('genindex-all.html', Fernet.generate_key(), None, None, 20),
     ('genindex-all.html', Fernet.generate_key(), zstd_open, {'fernet_key':Fernet.generate_key()}, 20),
+    ('genindex-all.html', Fernet.generate_key(), fernetfile.open, {'fernet_key':Fernet.generate_key()}, 20),
     ('searchindex.js', Fernet.generate_key(), None, None, 5),
     ('searchindex.js', Fernet.generate_key(), zstd_open, {'fernet_key':Fernet.generate_key()}, 5),
+    ('searchindex.js', Fernet.generate_key(), fernetfile.open, {'fernet_key':Fernet.generate_key()}, 5),
     ('searchindex.js', Fernet.generate_key(), None, None, 20),
     ('searchindex.js', Fernet.generate_key(), zstd_open, {'fernet_key':Fernet.generate_key()}, 20),
+    ('searchindex.js', Fernet.generate_key(), fernetfile.open, {'fernet_key':Fernet.generate_key()}, 20),
     ('library.pdf', Fernet.generate_key(), None, None, 5),
     ('library.pdf', Fernet.generate_key(), zstd_open, {'fernet_key':Fernet.generate_key()}, 5),
+    ('library.pdf', Fernet.generate_key(), fernetfile.open, {'fernet_key':Fernet.generate_key()}, 5),
     ('library.pdf', Fernet.generate_key(), None, None, 20),
     ('library.pdf', Fernet.generate_key(), zstd_open, {'fernet_key':Fernet.generate_key()}, 20),
+    ('library.pdf', Fernet.generate_key(), fernetfile.open, {'fernet_key':Fernet.generate_key()}, 20),
 ])
 def test_benchmark_fstore(random_path, dt, key, secure_open, secure_params, nb_doc):
     dataf = os.path.join(random_path, 'test.frnt')
@@ -375,6 +381,8 @@ def test_benchmark_fstore(random_path, dt, key, secure_open, secure_params, nb_d
             assert data == datar
     if secure_open == zstd_open:
         sopen = 'zstd'
+    elif secure_open == fernetfile.open:
+        sopen = 'frnt'
     else:
         sopen = 'None'
     with open('BENCHMARK.md','at') as ff:
