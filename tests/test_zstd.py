@@ -185,7 +185,7 @@ def test_files_zstd_encrypt(random_path):
 
     with open(datafsrc, 'wb') as f:
         for i in range(1024):
-            f.write(randbytes(1024 * 5))
+            f.write(randbytes(1024 * 5 + i))
 
     with open(datafsrc, 'rb') as fin, zstd_open(dataftgt, mode='wb', fernet_key=key) as fout:
         while True:
