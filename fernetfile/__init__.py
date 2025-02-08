@@ -25,6 +25,8 @@ __all__ = ["FernetFile", "open"]
 
 READ = 'rb'
 WRITE = 'wb'
+APPEND = 'ab'
+EXCLUSIVE = 'xb'
 
 META_SIZE = 4
 BUFFER_SIZE = 1024 * 64
@@ -323,6 +325,7 @@ class FernetFile(BaseStream):
     This class only supports opening files in binary mode.
 
     `fernetfile.zstd`
+    `fernetfile.store`
 
     """
 
@@ -415,7 +418,7 @@ class FernetFile(BaseStream):
         # ~ return self._buffer.raw._last_mtime
 
     def __repr__(self):
-        s = repr(self.fileobj)
+        s = repr(self.myfileobj)
         return '<FernetFile ' + s[1:-1] + ' ' + hex(id(self)) + '>'
 
     def _init_write(self, filename):

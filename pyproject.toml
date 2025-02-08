@@ -45,6 +45,7 @@ classifiers = [
 test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
 build = ["build", 'twine']
 zstd = ["pyzstd"]
+store = ["pyzstd", "filelock"]
 benchmark = ["pytest-ordering"]
 doc = ["pdoc"]
 

@@ -15,6 +15,7 @@ import sys
 import io
 
 import fernetfile
+from fernetfile import CHUNK_SIZE, READ, WRITE, APPEND, EXCLUSIVE # noqa F401
 
 try:
     import pyzstd
@@ -58,7 +59,7 @@ try:
 
             Look at `pyzstd documentation <https://pyzstd.readthedocs.io/en/stable/#advanced-parameters>`_
             """
-            chunk_size = kwargs.pop('chunk_size', fernetfile.CHUNK_SIZE)
+            chunk_size = kwargs.pop('chunk_size', CHUNK_SIZE)
             self.fernet_file = fernetfile.FernetFile(name, mode,
                 fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
             try:
@@ -69,7 +70,7 @@ try:
                 raise
 
         def __repr__(self):
-            s = repr(self.fileobj)
+            s = repr(self.fernet_file)
             return '<ZstdFernetFile ' + s[1:-1] + ' ' + hex(id(self)) + '>'
 
 
@@ -82,7 +83,7 @@ try:
 
     def open(filename, mode="rb", fernet_key=None,
             encoding=None, errors=None, newline=None,
-            chunk_size=fernetfile.CHUNK_SIZE,
+            chunk_size=CHUNK_SIZE,
             level_or_option=None, zstd_dict=None):
         """Open a ZstdFernet file in binary or text mode.
 

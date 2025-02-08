@@ -15,7 +15,7 @@ import fernetfile
 
 import pytest
 from fernetfile.zstd import FernetFile as _ZstdFernetFile, CParameter
-from .test_zstd import TarZstdFernetFile
+from fernetfile.store import TarZstdFernetFile
 from .test_chain import Bz2FernetFile, LzmaFernetFile, TarBz2FernetFile, TarLzmaFernetFile
 
 class ZstdFernetFile(_ZstdFernetFile):

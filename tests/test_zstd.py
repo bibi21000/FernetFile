@@ -23,30 +23,7 @@ try:
     ZSTD = True
 
     from fernetfile.zstd import FernetFile as ZstdFernetFile, open as zstd_open
-
-    class TarZstdFernetFile(tarfile.TarFile):
-
-        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
-            level_or_option = kwargs.pop('level_or_option', None)
-            zstd_dict = kwargs.pop('zstd_dict', None)
-            self.fernet_file = ZstdFernetFile(name, mode,
-                fernet_key=fernet_key, chunk_size=chunk_size,
-                    level_or_option=level_or_option, zstd_dict=zstd_dict,
-                    **kwargs)
-            try:
-                super().__init__(fileobj=self.fernet_file, mode=mode, **kwargs)
-
-            except Exception:
-                self.fernet_file.close()
-                raise
-
-        def close(self):
-            try:
-                super().close()
-
-            finally:
-                if self.fernet_file is not None:
-                    self.fernet_file.close()
+    from fernetfile.store import TarZstdFernetFile # , open as tarzstd_open
 
 except ModuleNotFoundError:
     ZSTD = False
