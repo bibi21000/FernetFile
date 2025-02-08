@@ -438,6 +438,12 @@ def test_store_secure_basic(random_path):
             ff.write(data3, 'file3.data')
             assert ff.closed is False
 
+    extdir = os.path.join(random_path, 'extract_tar')
+    os.makedirs(extdir, exist_ok=True)
+    with FernetStore(dataf, "rb", fernet_key=key,
+            secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
+        ff.extractall(extdir)
+
 def test_store_secure_tmp(random_path):
     key = Fernet.generate_key()
     data = randbytes(2487)

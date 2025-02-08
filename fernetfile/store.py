@@ -74,7 +74,7 @@ class StoreInfo():
             self.name = sname
         dirs = self.name.rsplit('/', 1)
         if len(dirs) > 1 :
-            self.subdir = os.path.join(self.store_path, '%s'%dirs[0])
+            self.subdir = '%s'%dirs[0]
             self.dirpath = os.path.join(self.store_path, self.subdir)
         else:
             self.subdir = None
@@ -328,6 +328,7 @@ class FernetStore():
             if members is None:
                 members = self.getmembers()
             for member in members:
+                print(member.subdir)
                 if member.subdir is not None:
                     os.makedirs(os.path.join(path, member.subdir), exist_ok=True)
 
