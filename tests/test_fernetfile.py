@@ -318,3 +318,23 @@ def test_files_encrypt(random_path):
 
     with open(datafsrc, 'rb') as f1, open(datafdec, 'rb') as f2:
         assert f1.read() == f2.read()
+
+def test_bad_file(random_path):
+    key = Fernet.generate_key()
+    data = randbytes(128)
+    dataf = os.path.join(random_path, 'test_repr.frnt')
+    with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
+        ff.write(data)
+
+    with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
+        data = ff.read()
+
+    with open(dataf, mode='rb') as ff:
+        cdata = ff.read()
+
+    with open(dataf, mode='wb') as ff:
+        ff.write(cdata[:-1])
+
+    with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
+        with pytest.raises(EOFError):
+            data = ff.read()
