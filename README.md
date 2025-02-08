@@ -10,6 +10,7 @@ for encrypting files with Fernet.
  - encrypting / decrypting data using chunks to reduce memory footprint
  - chainable with other python xxxFile interfaces (stream mode)
  - interface to compress/encrypt and decrypt/decompress (with pyzstd) in stream mode
+ - a FernetStore with a TarFile like interface (work in progress)
  - look at BENCHMARK.md ... and chain :)
  - look at tests for examples
 
@@ -64,18 +65,6 @@ Binary files :
         data = ff.read()
 ```
 
-## Use the FernetFile interface
-
-```
-    from fernetfile import FernetFile
-
-    with FernetFile('test.dac', mode='wb', fernet_key=key) as ff:
-        ff.write(data)
-
-    with FernetFile('test.dac', mode='rb', fernet_key=key) as ff:
-        data = ff.read()
-```
-
 ## Or the fast and furious FernetFile with zstd compression
 
 ```
@@ -92,75 +81,45 @@ Binary files :
         data = ff.read()
 ```
 
-## Or chain it to bz2
+## And chain it to tar and bz2
 
 ```
-    import fernetfile
-    import bz2
+class TarBz2FernetFile(tarfile.TarFile):
 
-    class Bz2FernetFile(bz2.BZ2File):
-
-        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
-            compresslevel = kwargs.pop('compresslevel', 9)
-            self.fernet_file = fernetfile.FernetFile(name, mode,
-                fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
+    def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
+        compresslevel = kwargs.pop('compresslevel', 9)
+        self.fernet_file = fernetfile.FernetFile(name, mode,
+            fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
+        try:
+            self.bz2_file = bz2.BZ2File(self.fernet_file, mode=mode,
+                compresslevel=compresslevel, **kwargs)
             try:
-                super().__init__(self.fernet_file, mode=mode,
-                    compresslevel=compresslevel, **kwargs)
+                super().__init__(fileobj=self.bz2_file, mode=mode, **kwargs)
+
             except Exception:
-                self.fernet_file.close()
+                self.bz2_file.close()
                 raise
 
-        def close(self):
+        except Exception:
+            self.fernet_file.close()
+            raise
+
+    def close(self):
+        try:
+            super().close()
+        finally:
             try:
-                super().close()
+                if self.fernet_file is not None:
+                    self.bz2_file.close()
             finally:
                 if self.fernet_file is not None:
                     self.fernet_file.close()
 
-
-    with Bz2FernetFile('test.bzc', mode='wb', fernet_key=key) as ff:
-        ff.write(data)
-
-    with Bz2FernetFile('test.bzc', mode='rb', fernet_key=key) as ff:
-        data = ff.read()
-```
-
-## And chain it to tar and pyzstd
-
-```
-    from fernetfile.zstd import FernetFile
-    import tarfile
-
-    class TarZstdFernetFile(tarfile.TarFile):
-
-        def __init__(self, name, mode='r', fernet_key=None, chunk_size=fernetfile.CHUNK_SIZE, **kwargs):
-            level_or_option = kwargs.pop('level_or_option', None)
-            zstd_dict = kwargs.pop('zstd_dict', None)
-            self.fernet_file = FernetFile(name, mode,
-                fernet_key=fernet_key, chunk_size=chunk_size,
-                    level_or_option=level_or_option, zstd_dict=zstd_dict,
-                    **kwargs)
-            try:
-                super().__init__(fileobj=self.fernet_file, mode=mode, **kwargs)
-
-            except Exception:
-                self.fernet_file.close()
-                raise
-
-        def close(self):
-            try:
-                super().close()
-
-            finally:
-                if self.fernet_file is not None:
-                    self.fernet_file.close()
-
-    with TarZstdFernetFile('test.zsc', mode='wb', fernet_key=key) as ff:
+    with TarBz2FernetFile('test.zsc', mode='wb', fernet_key=key) as ff:
         ff.add(dataf1, 'file1.out')
         ff.add(dataf2, 'file2.out')
 
-    with TarZstdFernetFile('test.zsc', mode='rb', fernet_key=key) as ff:
+    with TarBz2FernetFile('test.zsc', mode='rb', fernet_key=key) as ff:
         fdata1 = ff.extractfile('file1.out')
         fdata2 = ff.extractfile('file2.out')
 ```
@@ -191,7 +150,7 @@ Decrypt :
             fout.write(data)
 ```
 
-## And finally encrypt / decrypt existing files with the fast and furious FernetFile with zstd compression
+Or with the fast and furious FernetFile with zstd compression
 
 Encrypt :
 ```
@@ -216,3 +175,6 @@ Decrypt :
                 break
             fout.write(data)
 ```
+
+## Use the fernet store
+

@@ -1,18 +1,9 @@
 # -*- encoding: utf-8 -*-
 """ Store your files in a ztsd/tar based archive.
 
-2 versions :
+Interface "compatible" with tar
 
-Encrypted tar
 
-Encrypted tar of encrypted files
-
-Interface "compatible" with tar :
-
-- open :
-    - decrompress and extract files in a temporary directory
-
-=> need to be thread safe (flush can be called from another thread)
 
 """
 __license__ = """
@@ -38,10 +29,10 @@ from fernetfile.zstd import CHUNK_SIZE, READ, WRITE, APPEND, EXCLUSIVE
 _open = open
 
 class TarZstdFernetFile(tarfile.TarFile):
-    """ """
+    """The container of the store. Based on TarFfile with encryption"""
 
     def __init__(self, name, mode='r', fileobj=None, fernet_key=None, **kwargs):
-        """ """
+        """Init the TarZstdFernetFile"""
         level_or_option = kwargs.pop('level_or_option', None)
         zstd_dict = kwargs.pop('zstd_dict', None)
         chunk_size = kwargs.pop('chunk_size', CHUNK_SIZE)
@@ -56,7 +47,7 @@ class TarZstdFernetFile(tarfile.TarFile):
             raise
 
     def close(self):
-        """ """
+        """Close the TarZstdFernetFile"""
         try:
             super().close()
 
@@ -74,7 +65,7 @@ class StoreInfo():
     """ """
 
     def __init__(self, name, store_path=None):
-        """ """
+        """A representation of the file in tmp"""
         self.store_path = store_path
         sname = str(name)
         if sname[0] == '/':
@@ -92,7 +83,7 @@ class StoreInfo():
 
     @property
     def mtime(self):
-        """ """
+        """The mtime of the file in tmp"""
         if os.path.isfile(self.path):
             return os.path.getmtime(self.path)
         return None
@@ -108,7 +99,8 @@ class FernetStore():
     filename = None
 
     def __init__(self, filename=None, mode=None, fernet_key=None, fileobj=None,
-            secure_open=None, auto_flush=True, backup=None, **kwargs):
+            secure_open=None, secure_params=None, auto_flush=True,
+            backup=None, **kwargs):
         """Constructor for the FernetFile class.
 
         At least one of fileobj and filename must be given a
@@ -141,6 +133,8 @@ class FernetStore():
         Everytime data are written in archive, it is flushed to file : this means
         that thar archive is compressed and crypted. You can change this with auto_flush.
         Data will be flushed only on close.
+
+        This store is thread safe, this allows you to flush from a timer for example.
 
         If you want to backup archive before flushing it, pass extention to this parameter.
         """
@@ -175,48 +169,56 @@ class FernetStore():
         self.auto_flush = auto_flush
         self._lockfile = FileLock(self.filename+'.lock')
         self.secure_open = _open
+        self.secure_params = secure_params
         if secure_open is not None:
             self.secure_open = secure_open
+        if self.secure_params is None:
+            self.secure_params = {}
         self.dirpath = None
         self._dirctime = None
         self._dirmtime = None
 
     def __repr__(self):
-        """ """
+        """A repr of the store"""
         s = repr(self.filename)
         return '<FernetStore ' + s[1:-1] + ' ' + hex(id(self)) + '>'
 
     def _check_not_closed(self):
-        """ """
+        """Check if the store is closed"""
         if self.closed:
             raise io.UnsupportedOperation("I/O operation on closed file")
 
     def _check_can_write(self):
-        """ """
+        """Check we can write in store"""
         if self.closed:
             raise io.UnsupportedOperation("I/O operation on closed file")
         if not self.writable:
             raise io.UnsupportedOperation("File not open for writing")
 
+    def _check_can_read(self):
+        """Check we can read in store"""
+        if self.closed:
+            raise io.UnsupportedOperation("I/O operation on closed file")
+        if not self.readable:
+            raise io.UnsupportedOperation("File not open for reading")
+
     def __enter__(self):
-        """ """
+        """Enter context manager"""
         return self.open()
 
     def __exit__(self, type, value, traceback):
-        """ """
+        """Exit context manager"""
         self.close()
 
     def open(self):
-        """ """
+        """Open the store with a lock"""
         self._lockfile.acquire()
         file_exists = os.path.isfile(self.filename)
         if file_exists:
             if self.mode == EXCLUSIVE:
-                import errno
                 raise FileExistsError('File already exists %s' % self.filename)
         else:
             if self.mode == READ:
-                import errno
                 raise FileNotFoundError('File not found %s' % self.filename)
         self.dirpath = tempfile.mkdtemp(prefix=".fernet_")
         if file_exists:
@@ -226,7 +228,7 @@ class FernetStore():
         return self
 
     def _write_store(self):
-        """ """
+        """Write the store in filename"""
         self._check_can_write()
         with self._lock:
             if self.backup is not None:
@@ -241,7 +243,7 @@ class FernetStore():
             self._dirctime = self._dirmtime = time.time_ns()
 
     def getmembers(self):
-        """ """
+        """Get members or the store"""
         members = []
         for root, dirs, files in os.walk(self.dirpath):
             for fname in files:
@@ -250,7 +252,7 @@ class FernetStore():
         return members
 
     def close(self):
-        """ """
+        """Close the store. If file is open for writing, the store is rewriting"""
         if self.writable:
             self._write_store()
         shutil.rmtree(self.dirpath)
@@ -260,14 +262,14 @@ class FernetStore():
         self._lockfile.release()
 
     def flush(self, force=True):
-        """ """
+        """Flush data to store if needed. Unless force is True """
         if force is False and self.modified is False:
             return
         self._write_store()
 
     @contextmanager
     def file(self, arcname=None, mode='rb', encoding=None):
-        """Return a file descriptor"""
+        """Return a file descriptor on arcname"""
         fffile = None
         with self._lock:
             if isinstance(arcname, StoreInfo):
@@ -277,7 +279,7 @@ class FernetStore():
             try:
                 if finfo.subdir is not None:
                     os.makedirs(os.path.join(self.dirpath, finfo.subdir), exist_ok=True)
-                fffile = ffile = self.secure_open(finfo.path, mode=mode, encoding=encoding)
+                fffile = ffile = self.secure_open(finfo.path, mode=mode, encoding=encoding, **self.secure_params)
                 yield ffile
                 ffile.close()
                 ffile = None
@@ -292,7 +294,8 @@ class FernetStore():
             self.flush()
 
     def add(self, filename, arcname=None, replace=True):
-        """ """
+        """Add file as arcname. If arcname exists, it is replaced by default.
+        Otherwise an exception is raised"""
         with self._lock:
             self._check_can_write()
             if isinstance(arcname, StoreInfo):
@@ -302,7 +305,6 @@ class FernetStore():
 
             file_exists = os.path.isfile(finfo.path)
             if file_exists is True and replace is False:
-                import errno
                 raise FileExistsError('File already exists %s' % self.filename)
 
             if file_exists is True:
@@ -311,12 +313,27 @@ class FernetStore():
             if finfo.subdir is not None:
                 os.makedirs(os.path.join(self.dirpath, finfo.subdir), exist_ok=True)
 
-            with _open(filename, 'rb') as ff, self.secure_open(finfo.path, mode='wb') as sf:
+            with _open(filename, 'rb') as ff, self.secure_open(finfo.path, mode='wb', **self.secure_params) as sf:
                 sf.write(ff.read())
             self._dirmtime = time.time_ns()
 
         if self.auto_flush is True:
             self.flush()
+
+    def extractall(self, path='.', members=None):
+        """Extract all files to path"""
+        with self._lock:
+            self._check_can_read()
+            os.makedirs(path, exist_ok=True)
+            if members is None:
+                members = self.getmembers()
+            for member in members:
+                if member.subdir is not None:
+                    os.makedirs(os.path.join(path, member.subdir), exist_ok=True)
+
+                with self.secure_open(member.path, mode='rb', **self.secure_params) as fin, \
+                    _open(os.path.join(path, member.name), mode='wb') as fout:
+                        fout.write(fin.read())
 
     def _delete(self, arcinfo=None):
         """Delete file in store without lock"""
@@ -336,25 +353,25 @@ class FernetStore():
             self.flush()
 
     def append(self, data, arcname=None):
-        """ """
+        """Append data to arcname"""
         self._check_can_write()
         with self.file(arcname=arcname, mode='ab') as nf:
             nf.write(data)
 
     def write(self, data, arcname=None):
-        """ """
+        """Write data to arcname"""
         self._check_can_write()
         with self.file(arcname=arcname, mode='wb') as nf:
             nf.write(data)
 
     def read(self, arcname=None):
-        """ """
+        """Read data from arcname"""
         self._check_not_closed()
         with self.file(arcname=arcname, mode='rb') as nf:
             return nf.read()
 
     def readlines(self, arcname=None, encoding='UTF-8'):
-        """ """
+        """Read a list of lines from arcname"""
         self._check_not_closed()
         lines = []
         with self.file(arcname=arcname, mode='rt', encoding=encoding) as nf:
@@ -363,7 +380,7 @@ class FernetStore():
         return lines
 
     def writelines(self, lines, arcname=None, encoding='UTF-8'):
-        """ """
+        """Write a list of lines to arcname"""
         self._check_can_write()
         with self.file(arcname=arcname, mode='wt', encoding=encoding) as nf:
             for line in lines:
