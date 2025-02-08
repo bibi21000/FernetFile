@@ -23,9 +23,11 @@ class ZstdFernetFile(_ZstdFernetFile):
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
-@pytest.mark.run(order=1)
+@pytest.mark.run(order=21)
 def test_benchmark_header(random_path):
-    with open('BENCHMARK.md','wt') as ff:
+    with open('BENCHMARK.md','at') as ff:
+        ff.write("\n")
+        ff.write("\n")
         ff.write("# General benchmarks\n")
         ff.write("\n")
         ff.write("| Class                | Data                 |  Chunk size |  Orig size  | Crypt size |  Comp ratio | WTime  | Rtime  |\n")
@@ -41,7 +43,7 @@ def test_benchmark_header(random_path):
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
-@pytest.mark.run(order=2)
+@pytest.mark.run(order=22)
 @pytest.mark.parametrize("fcls, dt, buff_size, file_size", [
     (fernetfile.FernetFile, 'download.html', 1024 * 16, 0),
     (fernetfile.FernetFile, 'genindex-all.html', 1024 * 16, 0),
@@ -159,7 +161,7 @@ def test_benchmark(random_path, fcls, dt, buff_size, file_size):
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
-@pytest.mark.run(order=3)
+@pytest.mark.run(order=23)
 @pytest.mark.parametrize("fcls, dt, buff_size, file_size", [
     (TarBz2FernetFile, 'html,js and pdf', 1024 * 16, 0),
     (TarBz2FernetFile, 'html,js and pdf', 1024 * 256, 0),
@@ -218,12 +220,15 @@ def test_benchmark_zstd_header(random_path):
         ff.write("\n")
         ff.write("| Class                | Data                 | Lvl | Wrks |  Orig size  | Crypt size |  Comp ratio | WTime  | Rtime  |\n")
         ff.write("|:---------------------|:---------------------|----:|-----:|------------:|-----------:|------------:|-------:|-------:|\n")
-    # ~ urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-pdf-a4.zip", "docpython.pdf.zip")
-    # ~ with zipfile.ZipFile('docpython.pdf.zip', 'r') as zip_ref:
-        # ~ zip_ref.extractall('.')
-    # ~ urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-html.zip", "docpython.html.zip")
-    # ~ with zipfile.ZipFile('docpython.html.zip', 'r') as zip_ref:
-        # ~ zip_ref.extractall('.')
+    if os.path.isfile('docpython.pdf.zip') is False:
+        urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-pdf-a4.zip", "docpython.pdf.zip")
+        with zipfile.ZipFile('docpython.pdf.zip', 'r') as zip_ref:
+            zip_ref.extractall('.')
+    if os.path.isfile('docpython.html.zip') is False:
+        urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-html.zip", "docpython.html.zip")
+        with zipfile.ZipFile('docpython.html.zip', 'r') as zip_ref:
+            zip_ref.extractall('.')
+
 
 
 # ~ @pytest.mark.skip("Manual test")
@@ -291,29 +296,32 @@ def test_benchmark_zstd_tar(random_path, fcls, dt, lvl, wrks):
 
 
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
-@pytest.mark.run(order=20)
+@pytest.mark.run(order=0)
 def test_benchmark_fstore_header(random_path):
-    with open('BENCHMARK.md','at') as ff:
-        ff.write("\n")
-        ff.write("\n")
-        ff.write("# Benchmarks FernetStore with random data\n")
+    with open('BENCHMARK.md','wt') as ff:
+        ff.write("# Benchmarks FernetStore\n")
         ff.write("\n")
         ff.write("Tests done with autoflush, with or without open_secure.\n")
-        ff.write("WT -1, ... are the last add time of files in store\n")
-        ff.write("WTime is the total write time. RTime the time spend to read\n")
+        ff.write("\n")
+        ff.write("WT -1, ... are the last store.add time in store\n")
+        ff.write("\n")
+        ff.write("WTime is the total write time. RTime the time spent to read\n")
         ff.write("\n")
         ff.write("| Data              | NbDocs | Op sec | Orig size | Crypt size | C Ratio | WTime | Rtime | WT -1 | WT -2 | WT -3 | WT -4 |\n")
         ff.write("|:------------------|-------:|-------:|----------:|-----------:|--------:|------:|------:|------:|------:|------:|------:|\n")
-    # ~ urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-pdf-a4.zip", "docpython.pdf.zip")
-    # ~ with zipfile.ZipFile('docpython.pdf.zip', 'r') as zip_ref:
-        # ~ zip_ref.extractall('.')
-    # ~ urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-html.zip", "docpython.html.zip")
-    # ~ with zipfile.ZipFile('docpython.html.zip', 'r') as zip_ref:
-        # ~ zip_ref.extractall('.')
+    if os.path.isfile('docpython.pdf.zip') is False:
+        urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-pdf-a4.zip", "docpython.pdf.zip")
+        with zipfile.ZipFile('docpython.pdf.zip', 'r') as zip_ref:
+            zip_ref.extractall('.')
+    if os.path.isfile('docpython.html.zip') is False:
+        urllib.request.urlretrieve("https://docs.python.org/3/archives/python-3.13-docs-html.zip", "docpython.html.zip")
+        with zipfile.ZipFile('docpython.html.zip', 'r') as zip_ref:
+            zip_ref.extractall('.')
+
 
 # ~ @pytest.mark.skip("Manual test")
 @pytest.mark.skipif(not importlib.util.find_spec("pytest_ordering"), reason="requires the pytest_ordering package")
-@pytest.mark.run(order=21)
+@pytest.mark.run(order=1)
 @pytest.mark.parametrize("dt, key, secure_open, secure_params, nb_doc", [
     ('genindex-all.html', Fernet.generate_key(), None, None, 5),
     ('genindex-all.html', Fernet.generate_key(), zstd_open, {'fernet_key':Fernet.generate_key()}, 5),
@@ -370,6 +378,6 @@ def test_benchmark_fstore(random_path, dt, key, secure_open, secure_params, nb_d
     else:
         sopen = 'None'
     with open('BENCHMARK.md','at') as ff:
-        ff.write("|%-18s | %6.0f | %-6s | %9.0f |  %9.0f | %7.0f | %5.2f | %5.2f | %5.2f | %5.2f | %5.2f | %5.2f |\n" %
+        ff.write("|%-18s | %6.0f | %-6s | %9.0f |  %9.0f | %7.2f | %5.2f | %5.2f | %5.2f | %5.2f | %5.2f | %5.2f |\n" %
         (dt, nb_doc, sopen, file_size / 1024, comp_size / 1024, comp_size / file_size * 100,
         time_write - time_start, time_read - time_write, times[-1] - times[-2], times[-2] - times[-3], times[-3] - times[-4], times[-4] - times[-5]))
