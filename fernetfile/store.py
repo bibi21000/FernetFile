@@ -195,12 +195,12 @@ class FernetStore():
         if not self.writable:
             raise io.UnsupportedOperation("File not open for writing")
 
-    def _check_can_read(self):
-        """Check we can read in store"""
-        if self.closed:
-            raise io.UnsupportedOperation("I/O operation on closed file")
-        if not self.readable:
-            raise io.UnsupportedOperation("File not open for reading")
+    # ~ def _check_can_read(self):
+        # ~ """Check we can read in store"""
+        # ~ if self.closed:
+            # ~ raise io.UnsupportedOperation("I/O operation on closed file")
+        # ~ if not self.readable:
+            # ~ raise io.UnsupportedOperation("File not open for reading")
 
     def __enter__(self):
         """Enter context manager"""
@@ -323,7 +323,7 @@ class FernetStore():
     def extractall(self, path='.', members=None):
         """Extract all files to path"""
         with self._lock:
-            self._check_can_read()
+            self._check_not_closed()
             os.makedirs(path, exist_ok=True)
             if members is None:
                 members = self.getmembers()
