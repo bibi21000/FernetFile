@@ -1,6 +1,7 @@
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/bibi21000/FernetFile/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/bibi21000/FernetFile/tree/main)
 [![codecov](https://codecov.io/gh/bibi21000/FernetFile/graph/badge.svg?token=4124GIOJAK)](https://codecov.io/gh/bibi21000/FernetFile)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/fernetfile)
+![Static Badge](https://img.shields.io/badge/Documentation-Documentation?color=darkblue&link=https%3A%2F%2Fbibi21000.github.io%2FFernetFile%2Ffernetfile.html)
 
 # FernetFile
 
