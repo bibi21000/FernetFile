@@ -13,7 +13,7 @@ import struct
 
 from cryptography.fernet import Fernet
 
-from fernetfile.store import StoreInfo, FernetStore, TarZstdFernetFile
+from fernetfile.store import StoreInfo, FernetStore, TarZstdFernetFile, open as store_open
 
 import pytest
 
@@ -83,6 +83,34 @@ def test_store_info(random_path):
     sinfo = StoreInfo('titi', store_path=random_path)
     assert repr(sinfo).startswith('<FernetStore')
     assert sinfo.mtime is None
+
+def test_store_open(random_path):
+    key = Fernet.generate_key()
+    data = randbytes(2487)
+    data2 = randbytes(1536)
+    data2a = randbytes(7415)
+    dataf = os.path.join(random_path, 'test.stzf')
+
+    with store_open(dataf, mode='wb', fernet_key=key) as ff:
+        assert repr(ff).startswith('<FernetStore')
+        ff.write(data, 'file1.data')
+        ff.write(data2, 'file2.data')
+        mtime = ff.mtime
+        assert ff.writable
+        assert not ff.readable
+
+    with store_open(dataf, "rb", fernet_key=key) as ff:
+        assert data == ff.read('file1.data')
+        assert data2 == ff.read('file2.data')
+        assert not ff.writable
+        assert ff.readable
+
+    with open(dataf, "rb") as fdata:
+        with store_open(fdata, "rb", fernet_key=key) as ff:
+            assert data == ff.read('file1.data')
+            assert data2 == ff.read('file2.data')
+            assert not ff.writable
+            assert ff.readable
 
 def test_store_basic(random_path):
     key = Fernet.generate_key()

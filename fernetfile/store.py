@@ -35,16 +35,17 @@ from filelock import FileLock
 from fernetfile.zstd import FernetFile as ZstdFernetFile
 from fernetfile.zstd import CHUNK_SIZE, READ, WRITE, APPEND, EXCLUSIVE
 
+_open = open
 
 class TarZstdFernetFile(tarfile.TarFile):
     """ """
 
-    def __init__(self, name, mode='r', fernet_key=None, **kwargs):
+    def __init__(self, name, mode='r', fileobj=None, fernet_key=None, **kwargs):
         """ """
         level_or_option = kwargs.pop('level_or_option', None)
         zstd_dict = kwargs.pop('zstd_dict', None)
         chunk_size = kwargs.pop('chunk_size', CHUNK_SIZE)
-        self.fernet_file = ZstdFernetFile(name, mode,
+        self.fernet_file = ZstdFernetFile(name, mode, fileobj=fileobj,
             fernet_key=fernet_key, level_or_option=level_or_option,
                 zstd_dict=zstd_dict, chunk_size=chunk_size, **kwargs)
         try:
@@ -104,7 +105,9 @@ class StoreInfo():
 class FernetStore():
     """ """
 
-    def __init__(self, filename=None, mode=None, fernet_key=None,
+    filename = None
+
+    def __init__(self, filename=None, mode=None, fernet_key=None, fileobj=None,
             secure_open=None, auto_flush=True, backup=None, **kwargs):
         """Constructor for the FernetFile class.
 
@@ -143,8 +146,6 @@ class FernetStore():
         """
         if fernet_key is None:
             raise ValueError("Invalid fernet key: {!r}".format(fernet_key))
-        if filename is None:
-            raise ValueError("Invalid filename: {!r}".format(filename))
         if mode is None or ('t' in mode or 'U' in mode):
             raise ValueError("Invalid mode: {!r}".format(mode))
         if mode and 'b' not in mode:
@@ -162,11 +163,18 @@ class FernetStore():
         self._lock = threading.Lock()
         self.fernet_key = fernet_key
         self.kwargs = kwargs
-        self.filename = filename
+        if fileobj is not None:
+            self.filename = fileobj.name
+            self.fileobj = fileobj
+        else:
+            self.filename = filename
+            self.fileobj = None
+        if self.filename is None:
+            raise ValueError("Invalid filename: {!r}".format(filename))
         self.backup = backup
         self.auto_flush = auto_flush
         self._lockfile = FileLock(self.filename+'.lock')
-        self.secure_open = open
+        self.secure_open = _open
         if secure_open is not None:
             self.secure_open = secure_open
         self.dirpath = None
@@ -212,7 +220,7 @@ class FernetStore():
                 raise FileNotFoundError('File not found %s' % self.filename)
         self.dirpath = tempfile.mkdtemp(prefix=".fernet_")
         if file_exists:
-            with TarZstdFernetFile(self.filename, mode='rb', fernet_key=self.fernet_key, **self.kwargs) as tff:
+            with TarZstdFernetFile(self.filename, mode='rb', fileobj=self.fileobj, fernet_key=self.fernet_key, **self.kwargs) as tff:
                 tff.extractall(self.dirpath)
         self._dirctime = self._dirmtime = time.time_ns()
         return self
@@ -226,7 +234,7 @@ class FernetStore():
                     os.remove(self.filename + self.backup)
                 shutil.copy(self.filename, self.filename + self.backup)
 
-            with TarZstdFernetFile(self.filename, mode='wb', fernet_key=self.fernet_key, **self.kwargs) as tff:
+            with TarZstdFernetFile(self.filename, mode='wb', fileobj=self.fileobj, fernet_key=self.fernet_key, **self.kwargs) as tff:
                 for member in self.getmembers():
                     tff.add(member.path, arcname=member.name)
 
@@ -303,7 +311,7 @@ class FernetStore():
             if finfo.subdir is not None:
                 os.makedirs(os.path.join(self.dirpath, finfo.subdir), exist_ok=True)
 
-            with open(filename, 'rb') as ff, self.secure_open(finfo.path, mode='wb') as sf:
+            with _open(filename, 'rb') as ff, self.secure_open(finfo.path, mode='wb') as sf:
                 sf.write(ff.read())
             self._dirmtime = time.time_ns()
 
@@ -391,3 +399,31 @@ class FernetStore():
         self._check_not_closed()
         return self.mode == WRITE or self.mode == APPEND \
             or self.mode == EXCLUSIVE
+
+
+def open(filename, mode="rb", fernet_key=None, **kwargs):
+    """Open a FernetStore file in binary mode.
+
+    The filename argument can be an actual filename (a str or bytes object), or
+    an existing file object to read from or write to.
+
+    The mode argument can be "r", "rb", "w", "wb", "x", "xb", "a" or "ab" for
+    binary mode.
+
+    For binary mode, this function is equivalent to the FernetFile constructor:
+    FernetFile(filename, mode, fernet_key). In this case, the encoding, errors
+    and newline arguments must not be provided.
+
+
+    """
+    if "t" in mode:
+        raise ValueError("Invalid mode: %r" % (mode,))
+
+    if isinstance(filename, (str, bytes, os.PathLike)):
+        binary_file = FernetStore(filename, mode=mode, fernet_key=fernet_key, **kwargs)
+    elif hasattr(filename, "read") or hasattr(filename, "write"):
+        binary_file = FernetStore(None, mode=mode, fileobj=filename, fernet_key=fernet_key, **kwargs)
+    else:
+        raise TypeError("filename must be a str or bytes object, or a file")
+
+    return binary_file

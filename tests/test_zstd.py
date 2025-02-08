@@ -49,6 +49,11 @@ def test_crypt_zstd(random_path, buff_size, file_size):
         datar = ff.read()
     assert data == datar
 
+    with open(dataf, "rb") as fdata:
+        with zstd_open(fdata, "rb", fernet_key=key) as ff:
+            datar = ff.read()
+        assert data == datar
+
 
 @pytest.mark.skipif(not ZSTD, reason="requires the pyzstd library")
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 512 + 21) ])

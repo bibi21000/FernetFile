@@ -143,6 +143,11 @@ def test_reader(random_path):
         with pytest.raises(OSError):
             ff.seek(-1)
 
+    with open(dataf, "rb") as fdata:
+        with fernetfile.open(fdata, "rb", fernet_key=key) as ff:
+            datar = ff.read()
+        assert data == datar
+
     with open(dataf, "rb") as ff:
         with fernetfile.DecryptReader(ff, fernetfile.FernetDecryptor, fernet_key=key) as fp:
             assert fp.readable()

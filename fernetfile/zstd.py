@@ -23,7 +23,8 @@ try:
 
     class FernetFile(pyzstd.ZstdFile):
 
-        def __init__(self, name, mode='r', fernet_key=None, level_or_option=None, zstd_dict=None, **kwargs):
+        def __init__(self, name, mode='r', fernet_key=None, fileobj=None,
+                level_or_option=None, zstd_dict=None, **kwargs):
             """Constructor for the FernetFile class.
 
             At least one of fileobj and filename must be given a
@@ -60,7 +61,7 @@ try:
             Look at `pyzstd documentation <https://pyzstd.readthedocs.io/en/stable/#advanced-parameters>`_
             """
             chunk_size = kwargs.pop('chunk_size', CHUNK_SIZE)
-            self.fernet_file = fernetfile.FernetFile(name, mode,
+            self.fernet_file = fernetfile.FernetFile(name, mode, fileobj=fileobj,
                 fernet_key=fernet_key, chunk_size=chunk_size, **kwargs)
             try:
                 super().__init__(self.fernet_file, zstd_dict=zstd_dict,
