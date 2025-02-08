@@ -279,8 +279,7 @@ class FernetDecryptor():
                 break
             size_data = struct.unpack('<I', size_struct)[0]
             chunk = data[beg + META_SIZE:beg + size_data + META_SIZE]
-            # ~ log.debug("beg %s, size_data %s, len_chunk %s, chunk %s %s" %
-                # ~ (beg, size_data, len(chunk), chunk[:15], chunk[-15:]))
+
             if len(chunk) < size_data:
                 self.unused_data = data[beg:]
                 break
@@ -298,8 +297,6 @@ class FernetDecryptor():
             ret = ret[:size]
         else:
             self.unsent_data = b''
-        # ~ log.debug("FernetDecryptor.decompress : size received %s, len data received %s, type ret %s, len ret %s, eof %s, needs_input %s, size_data %s, unused_data %s, unsent_data %s" %
-            # ~ (size, len(data), type(ret), len(ret) if ret is not None else 0, self.eof, self.needs_input, size_data, len(self.unused_data) if self.unused_data is not None else 0, len(self.unsent_data) ))
         return ret
 
 
@@ -382,7 +379,6 @@ class FernetFile(BaseStream):
             fileobj = self.myfileobj = builtins.open(filename, mode or 'rb')
         else:
             self.myfileobj = fileobj
-        origmode = mode
         if mode is None:
             mode = getattr(fileobj, 'mode', 'rb')
 
@@ -393,13 +389,6 @@ class FernetFile(BaseStream):
             self._buffer = io.BufferedReader(raw)
 
         elif mode.startswith(('w', 'a', 'x')):
-            if origmode is None:
-                import warnings
-                warnings.warn(
-                    "FernetFile was opened for writing, but this will "
-                    "change in future Python releases.  "
-                    "Specify the mode argument for opening it for writing.",
-                    FutureWarning, 2)
             self.mode = WRITE
             self._init_write(filename)
             self.crypt = FernetCryptor(fernet_key, chunk_size=self.chunk_size)
