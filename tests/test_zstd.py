@@ -233,6 +233,10 @@ def test_zst_bad_mode(random_path):
     print(repr(ZstdFernetFile))
 
     with pytest.raises(ValueError):
+        with ZstdFernetFile(dataf, mode='wbt', fernet_key=None) as ff:
+            ff.write(data)
+
+    with pytest.raises(ValueError):
         with ZstdFernetFile(dataf, mode='wbt', fernet_key=key) as ff:
             ff.write(data)
 
