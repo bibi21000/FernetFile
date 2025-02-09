@@ -213,13 +213,15 @@ class DecryptReader(io.BufferedIOBase):
         return self._pos
 
 
-class FernetCryptor():
+class _Encryptor():
 
-    def __init__(self, fernet_key, chunk_size=CHUNK_SIZE):
+    def __init__(self, chunk_size=CHUNK_SIZE):
         self.chunk_size = chunk_size
-        self.fernet = Fernet(fernet_key)
         self._marks = 0
-        log.debug("Init Fernet cryptor")
+        log.debug("Encryptor initialized")
+
+    def _crypt(self, chunk):
+        return chunk
 
     def crypt(self, data):
         ret = b''
@@ -228,7 +230,7 @@ class FernetCryptor():
             chunk = data[beg:beg + self.chunk_size]
             if len(chunk) == 0:
                 break
-            enc = self.fernet.encrypt(chunk)
+            enc = self._crypt(chunk)
             self._marks += 1
             # ~ log.debug("len enc %s, chunk size %s" %
                 # ~ (len(enc), self.chunk_size))
@@ -238,25 +240,38 @@ class FernetCryptor():
                 break
             beg += self.chunk_size
 
-        log.debug("FernetCryptor.compress : len ret %s, chunk size %s, marks %s" %
+        log.debug("FernetEncryptor.compress : len ret %s, chunk size %s, marks %s" %
             (len(ret), self.chunk_size, self._marks))
         return ret
 
     def flush(self):
         return b''
 
+class FernetEncryptor(_Encryptor):
 
-class FernetDecryptor():
-
-    def __init__(self, fernet_key):
+    def __init__(self, fernet_key, **kwargs):
+        super().__init__(**kwargs)
+        if fernet_key is None:
+            raise ValueError("Invalid fernet_key: {!r}".format(None))
         self.fernet = Fernet(fernet_key)
+
+    def _crypt(self, chunk):
+        return self.fernet.encrypt(chunk)
+
+
+class _Decryptor():
+
+    def __init__(self, **kwargs):
         self.eof = False
         # ~ self.needs_input = False
         self.needs_input = True
         self.unused_data = None
         self.unsent_data = b''
         self.pos = 0
-        log.debug("Init Fernet decryptor")
+        log.debug("Decryptor initialized")
+
+    def _decrypt(self, chunk):
+        return chunk
 
     def decrypt(self, data, size=-1):
         beg = 0
@@ -285,7 +300,7 @@ class FernetDecryptor():
             if len(chunk) < size_data:
                 self.unused_data = data[beg:]
                 break
-            ret += self.fernet.decrypt(chunk)
+            ret += self._decrypt(chunk)
             beg += size_data + META_SIZE
 
         ret = self.unsent_data + ret
@@ -301,6 +316,16 @@ class FernetDecryptor():
             self.unsent_data = b''
         return ret
 
+class FernetDecryptor(_Decryptor):
+
+    def __init__(self, fernet_key, **kwargs):
+        super().__init__(**kwargs)
+        if fernet_key is None:
+            raise ValueError("Invalid fernet_key: {!r}".format(None))
+        self.fernet = Fernet(fernet_key)
+
+    def _decrypt(self, chunk):
+        return self.fernet.decrypt(chunk)
 
 class _WriteBufferStream(io.RawIOBase):
     """Minimal object to pass WriteBuffer flushes into FernetFile"""
@@ -317,7 +342,7 @@ class _WriteBufferStream(io.RawIOBase):
         return True
 
 
-class FernetFile(BaseStream):
+class EncryptFile(BaseStream):
     """The FernetFile class simulates most of the methods of a file object with
     the exception of the truncate() method.
 
@@ -367,8 +392,6 @@ class FernetFile(BaseStream):
             write_buffer_size = 5 * self.chunk_size
         if mode and ('t' in mode or 'U' in mode):
             raise ValueError("Invalid mode: {!r}".format(mode))
-        if fernet_key is None:
-            raise ValueError("Invalid fernet_key: {!r}".format(None))
         if mode and 'b' not in mode:
             mode += 'b'
         if filename is None:
@@ -393,7 +416,7 @@ class FernetFile(BaseStream):
         elif mode.startswith(('w', 'a', 'x')):
             self.mode = WRITE
             self._init_write(filename)
-            self.crypt = FernetCryptor(fernet_key, chunk_size=self.chunk_size)
+            self.crypt = FernetEncryptor(fernet_key, chunk_size=self.chunk_size)
             self._buffer_size = write_buffer_size
             self._buffer = io.BufferedWriter(_WriteBufferStream(self),
                                              buffer_size=self._buffer_size)
@@ -600,6 +623,8 @@ class FernetFile(BaseStream):
         self._check_not_closed()
         return self._buffer.readline(size)
 
+class FernetFile(EncryptFile):
+    pass
 
 def open(filename, mode="rb", fernet_key=None,
          encoding=None, errors=None, newline=None,
