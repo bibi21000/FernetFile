@@ -275,3 +275,7 @@ def test_zst_bad_mode(random_path):
     with pytest.raises(ValueError):
         with zstd_open(dataf, mode='wb', fernet_key=None) as ff:
             ff.write(data)
+
+    with pytest.raises(TypeError):
+        with zstd_open(dataf, mode='wb', fernet_key=key, zstd_dict=1) as ff:
+            ff.write(data)
