@@ -6,7 +6,7 @@ import os
 from random import randbytes
 import io
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 import fernetfile
 
@@ -338,3 +338,11 @@ def test_bad_file(random_path):
     with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
         with pytest.raises(EOFError):
             data = ff.read()
+
+    with open(dataf, mode='wb') as ff:
+        ff.write(cdata[:-45] + b'o' + cdata[45:])
+
+    with fernetfile.FernetFile(dataf, mode='rb', fernet_key=key) as ff:
+        with pytest.raises(InvalidToken):
+            data = ff.read()
+

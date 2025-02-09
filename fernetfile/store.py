@@ -234,7 +234,7 @@ class FernetStore():
             if self.backup is not None:
                 if os.path.isfile(self.filename + self.backup) is True:
                     os.remove(self.filename + self.backup)
-                shutil.copy(self.filename, self.filename + self.backup)
+                shutil.move(self.filename, self.filename + self.backup)
 
             with TarZstdFernetFile(self.filename, mode='wb', fileobj=self.fileobj, fernet_key=self.fernet_key, **self.kwargs) as tff:
                 for member in self.getmembers():

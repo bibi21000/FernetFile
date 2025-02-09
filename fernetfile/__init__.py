@@ -277,6 +277,8 @@ class FernetDecryptor():
                 self.needs_input = False
                 self.eof = True
                 break
+            if len(size_struct) != META_SIZE:
+                raise IOError("Meta informations corrupted : %s != %s" % (len(size_struct), META_SIZE))
             size_data = struct.unpack('<I', size_struct)[0]
             chunk = data[beg + META_SIZE:beg + size_data + META_SIZE]
 
@@ -395,6 +397,7 @@ class FernetFile(BaseStream):
             self._buffer_size = write_buffer_size
             self._buffer = io.BufferedWriter(_WriteBufferStream(self),
                                              buffer_size=self._buffer_size)
+
         else:
             raise ValueError("Invalid mode: {!r}".format(mode))
 
