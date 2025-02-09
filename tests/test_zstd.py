@@ -32,10 +32,10 @@ except ModuleNotFoundError:
 
 @pytest.mark.skipif(not ZSTD, reason="requires the pyzstd library")
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 1024 * 1) ])
-def test_crypt_zstd(random_path, buff_size, file_size):
+def test_crypt_zstd(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
-    dataf = os.path.join(random_path, 'test.frnt')
+    dataf = os.path.join(random_path, 'test%s.frnt'%random_name)
     with ZstdFernetFile(dataf, mode='wb', fernet_key=key, chunk_size=buff_size) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
@@ -57,61 +57,61 @@ def test_crypt_zstd(random_path, buff_size, file_size):
 
 @pytest.mark.skipif(not ZSTD, reason="requires the pyzstd library")
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 512 + 21) ])
-def test_crypt_zstd_tar(random_path, buff_size, file_size):
+def test_crypt_zstd_tar(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
-    dataf = os.path.join(random_path, 'test.tbzf')
+    dataf = os.path.join(random_path, 'test%s.tbzf'%random_name)
 
-    dataf1 = os.path.join(random_path, 'file1.out')
+    dataf1 = os.path.join(random_path, 'file1%s.out'%random_name)
     with open(dataf1, "wb") as out:
         out.write(os.urandom(file_size * 5))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size * 50))
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 
     with TarZstdFernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
-        ff.add(dataf1, 'file1.out')
-        ff.add(dataf2, 'file2.out')
+        ff.add(dataf1, 'file1%s.out'%random_name)
+        ff.add(dataf2, 'file2%s.out'%random_name)
 
     os.unlink(dataf1)
     os.unlink(dataf2)
 
     with TarZstdFernetFile(dataf, "r", fernet_key=key) as ff:
-        fdatae = ff.extractfile('file1.out')
+        fdatae = ff.extractfile('file1%s.out'%random_name)
         assert fdatae.read() == ddataf1
-        fdatae = ff.extractfile('file2.out')
+        fdatae = ff.extractfile('file2%s.out'%random_name)
         assert fdatae.read() == ddataf2
 
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 512 + 31) ])
-def test_crypt_zstd_tar_append(random_path, buff_size, file_size):
+def test_crypt_zstd_tar_append(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
-    dataf = os.path.join(random_path, 'test.tbzf')
+    dataf = os.path.join(random_path, 'test%s.tbzf'%random_name)
 
-    dataf1 = os.path.join(random_path, 'file1.out')
+    dataf1 = os.path.join(random_path, 'file1%s.out'%random_name)
     with open(dataf1, "wb") as out:
         out.write(os.urandom(file_size * 5))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size * 50))
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 
-    dataf3 = os.path.join(random_path, 'file3.out')
+    dataf3 = os.path.join(random_path, 'file3%s.out'%random_name)
     with open(dataf3, "wb") as out:
         out.write(os.urandom(file_size * 10))
     with open(dataf3, "rb") as ff:
         ddataf3 = ff.read()
 
     with TarZstdFernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
-        ff.add(dataf1, 'file1.out')
-        ff.add(dataf2, 'file2.out')
+        ff.add(dataf1, 'file1%s.out'%random_name)
+        ff.add(dataf2, 'file2%s.out'%random_name)
 
     os.unlink(dataf1)
     os.unlink(dataf2)
@@ -119,7 +119,7 @@ def test_crypt_zstd_tar_append(random_path, buff_size, file_size):
     # Can't append to tar/bz2
     with pytest.raises(io.UnsupportedOperation):
         with TarZstdFernetFile(dataf, mode='a', fernet_key=key, chunk_size=buff_size) as ff:
-            ff.add(dataf3, 'file3.out')
+            ff.add(dataf3, 'file3%s.out'%random_name)
 
     # ~ os.unlink(dataf3)
 
@@ -131,11 +131,11 @@ def test_crypt_zstd_tar_append(random_path, buff_size, file_size):
         # ~ fdatae = ff.extractfile('file3.out')
         # ~ assert fdatae.read() == ddataf3
 
-def test_zstd_encoding(random_path):
+def test_zstd_encoding(random_path, random_name):
     key = Fernet.generate_key()
     datal = ["Ceci est un texte avec des accents : éè","avec plusieurs","lignes"]
     data = "\n".join(datal)
-    dataf = os.path.join(random_path, 'test_encoding.frnt')
+    dataf = os.path.join(random_path, 'test_encoding_%s.frnt'%random_name)
 
     with zstd_open(dataf, mode='wt', fernet_key=key, encoding="utf-8") as ff:
         ff.write(data)
@@ -175,13 +175,13 @@ def test_zstd_encoding(random_path):
     assert datal[2] == datar[2]
 
 
-def test_files_zstd_encrypt(random_path):
+def test_files_zstd_encrypt(random_path, random_name):
 
     key = Fernet.generate_key()
 
-    datafsrc = os.path.join(random_path, 'test.dat')
-    dataftgt = os.path.join(random_path, 'test.dtc')
-    datafdec = os.path.join(random_path, 'test.dec')
+    datafsrc = os.path.join(random_path, 'test%s.dat'%random_name)
+    dataftgt = os.path.join(random_path, 'test%s.dtc'%random_name)
+    datafdec = os.path.join(random_path, 'test%s.dec'%random_name)
 
     with open(datafsrc, 'wb') as f:
         for i in range(1024):
@@ -210,11 +210,11 @@ def test_files_zstd_encrypt(random_path):
         (1024 * 10, 1024 * 10), (1024 * 10, 1024 * 10 + 7), (1024 * 10, 1024 * 10 + 3),
         (1024 * 100, 1024 * 10), (1024 * 100, 1024 * 10 + 9), (1024 * 100, 1024 * 10 + 11),
     ])
-def test_buffer(random_path, buff_size, file_size):
+def test_buffer(random_path, random_name, buff_size, file_size):
     fernetfile.BUFFER_SIZE = buff_size
     key = Fernet.generate_key()
     data = randbytes(file_size)
-    dataf = os.path.join(random_path, 'test.frnt')
+    dataf = os.path.join(random_path, 'test%s.frnt'%random_name)
     with zstd_open(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
@@ -225,10 +225,10 @@ def test_buffer(random_path, buff_size, file_size):
     fernetfile.BUFFER_SIZE = 1024 * 10
     assert data == datar
 
-def test_zst_bad_mode(random_path):
+def test_zst_bad_mode(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(128)
-    dataf = os.path.join(random_path, 'test_bad_mode.frnt')
+    dataf = os.path.join(random_path, 'test_bad_mode_%s.frnt'%random_name)
 
     print(repr(ZstdFernetFile))
 

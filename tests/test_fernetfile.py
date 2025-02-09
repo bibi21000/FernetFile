@@ -18,11 +18,11 @@ import pytest
         (1024 * 10, 1024 * 10), (1024 * 10, 1024 * 10 + 7), (1024 * 10, 1024 * 10 + 3),
         (1024 * 100, 1024 * 10), (1024 * 100, 1024 * 10 + 9), (1024 * 100, 1024 * 10 + 11),
     ])
-def test_buffer(random_path, buff_size, file_size):
+def test_buffer(random_path, random_name, buff_size, file_size):
     fernetfile.BUFFER_SIZE = buff_size
     key = Fernet.generate_key()
     data = randbytes(file_size)
-    dataf = os.path.join(random_path, 'test.frnt')
+    dataf = os.path.join(random_path, random_name)
     with fernetfile.open(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
@@ -33,11 +33,11 @@ def test_buffer(random_path, buff_size, file_size):
     fernetfile.BUFFER_SIZE = 1024 * 10
     assert data == datar
 
-def test_encoding(random_path):
+def test_encoding(random_path, random_name):
     key = Fernet.generate_key()
     datal = ["Ceci est un texte avec des accents : éè","avec plusieurs","lignes"]
     data = "\n".join(datal)
-    dataf = os.path.join(random_path, 'test_encoding.frnt')
+    dataf = os.path.join(random_path, '%s_encoding.frnt'%random_name)
 
     with fernetfile.open(dataf, mode='wt', fernet_key=key, encoding="utf-8") as ff:
         ff.write(data)
@@ -64,7 +64,7 @@ def test_encoding(random_path):
         assert datal[2] == datar
 
     datal = ["Ceci est un texte avec des accents : éè","avec plusieurs","lignes"]
-    dataf = os.path.join(random_path, 'test_encoding.frnt')
+    dataf = os.path.join(random_path, '%s_encoding2.frnt'%random_name)
 
     with fernetfile.open(dataf, mode='wt', fernet_key=key, encoding="utf-8") as ff:
         ff.writelines(data)
@@ -76,10 +76,10 @@ def test_encoding(random_path):
     assert datal[1] + '\n' == datar[1]
     assert datal[2] == datar[2]
 
-def test_seek(random_path):
+def test_seek(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(1784) + b'0111110' + randbytes(3594) + b'0100010' + randbytes(2145)
-    dataf = os.path.join(random_path, 'test_seek.frnt')
+    dataf = os.path.join(random_path, 'test_seek_%s.frnt'%random_name)
 
     with fernetfile.open(dataf, mode='wb', fernet_key=key) as ff:
         assert ff.fileno() is not None
@@ -126,10 +126,10 @@ def test_seek(random_path):
         datar = ff.read(7)
         assert b'0100010' == datar
 
-def test_reader(random_path):
+def test_reader(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(1784) + b'0111110' + randbytes(3594) + b'0100010' + randbytes(2145)
-    dataf = os.path.join(random_path, 'test_reader.frnt')
+    dataf = os.path.join(random_path, 'test_reader_%s.frnt'%random_name)
 
     with fernetfile.open(dataf, mode='wb', fernet_key=key) as ff:
         assert ff.fileno() is not None
@@ -172,10 +172,10 @@ def test_reader(random_path):
             with pytest.raises(ValueError):
                 fp.seek(0, 999999)
 
-def test_bad_mode(random_path):
+def test_bad_mode(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(128)
-    dataf = os.path.join(random_path, 'test_bad_mode.frnt')
+    dataf = os.path.join(random_path, 'test_bad_mode_%s.frnt'%random_name)
 
     print(repr(fernetfile.FernetFile))
 
@@ -219,10 +219,10 @@ def test_bad_mode(random_path):
         with fernetfile.open(dataf, mode='wb', fernet_key=None) as ff:
             ff.write(data)
 
-def test_fernetfile(random_path):
+def test_fernetfile(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(128)
-    dataf = os.path.join(random_path, 'test_repr.frnt')
+    dataf = os.path.join(random_path, 'test_repr_%s.frnt'%random_name)
     with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
         assert ff.seekable() is False
@@ -264,10 +264,10 @@ def test_fernetfile(random_path):
         with fernetfile.FernetFile(dataf, mode='fff', fileobj="fake", fernet_key=key) as ff:
             data = ff.read()
 
-def test_peek(random_path):
+def test_peek(random_path, random_name):
     key = Fernet.generate_key()
     data = b'azazazazazazaz\n'
-    dataf = os.path.join(random_path, 'test_repr.frnt')
+    dataf = os.path.join(random_path, 'test_peek_%s.frnt'%random_name)
     with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
 
@@ -290,13 +290,13 @@ def test_peek(random_path):
         data = ff.peek(128)
         assert datar == data
 
-def test_files_encrypt(random_path):
+def test_files_encrypt(random_path, random_name):
 
     key = Fernet.generate_key()
 
-    datafsrc = os.path.join(random_path, 'test.dat')
-    dataftgt = os.path.join(random_path, 'test.dtc')
-    datafdec = os.path.join(random_path, 'test.dec')
+    datafsrc = os.path.join(random_path, 'test_%s.dat'%random_name)
+    dataftgt = os.path.join(random_path, 'test_%s.dtc'%random_name)
+    datafdec = os.path.join(random_path, 'test_%s.dec'%random_name)
 
     with open(datafsrc, 'wb') as f:
         for i in range(1024):
@@ -319,10 +319,10 @@ def test_files_encrypt(random_path):
     with open(datafsrc, 'rb') as f1, open(datafdec, 'rb') as f2:
         assert f1.read() == f2.read()
 
-def test_bad_file(random_path):
+def test_bad_file(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(128)
-    dataf = os.path.join(random_path, 'test_repr.frnt')
+    dataf = os.path.join(random_path, 'test_bad_%s.frnt'%random_name)
     with fernetfile.FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
 

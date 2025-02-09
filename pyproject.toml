@@ -42,9 +42,10 @@ classifiers = [
 pycoffer = "fernetfile.main:cli"
 
 [project.optional-dependencies]
-test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
+test = ["pytest", "coverage[toml]", "pytest-cov", "pytest-xdist", "ruff", "bandit"]
 build = ["build", 'twine']
 zstd = ["pyzstd"]
+pynacl = ["PyNaCl"]
 store = ["pyzstd", "filelock"]
 cli = ["pyzstd", "filelock", "click"]
 benchmark = ["pytest-ordering"]

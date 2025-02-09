@@ -4,8 +4,15 @@ import pytest
 
 @pytest.fixture
 def random_path():
-    """Fixture to execute asserts before and after a test is run"""
+    """Create and return temporary directory"""
     import tempfile
     tmpdir = tempfile.TemporaryDirectory()
     yield tmpdir.name
     tmpdir.cleanup()
+
+@pytest.fixture
+def random_name():
+    """Return a random string that can be used as filename"""
+    import random
+    import string
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))

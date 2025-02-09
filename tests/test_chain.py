@@ -162,11 +162,14 @@ class ZipFernetFile(zipfile.ZipFile):
                 self.fernet_file.close()
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 512 + 1) ])
-def test_crypt_bz2(random_path, buff_size, file_size):
+@pytest.mark.parametrize("buff_size, file_size", [
+    (1024 * 64, 1024 * 341 + 1),
+    (1024 * 16, 1024 * 147 + 1),
+    ])
+def test_crypt_bz2(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
-    dataf = os.path.join(random_path, 'test.frnt')
+    dataf = os.path.join(random_path, 'test%s.frnt'%random_name)
     with Bz2FernetFile(dataf, mode='wb', fernet_key=key) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
@@ -181,12 +184,15 @@ def test_crypt_bz2(random_path, buff_size, file_size):
     assert data == datar
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 512 + 13) ])
-def test_bz2_crypt(random_path, buff_size, file_size):
+@pytest.mark.parametrize("buff_size, file_size",[
+    (1024 * 48, 1024 * 512 + 13),
+    (1024 * 8, 1024 * 158 + 13),
+    ])
+def test_bz2_crypt(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
     fkey = Fernet(key)
     data = randbytes(file_size)
-    dataf = os.path.join(random_path, 'test.frnt')
+    dataf = os.path.join(random_path, 'test%s.frnt'%random_name)
     with FernetBz2File(dataf, mode='wb', fernet_key=key, chunk_size=buff_size) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
@@ -210,62 +216,68 @@ def test_bz2_crypt(random_path, buff_size, file_size):
     assert data == datar
 
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 512 + 31) ])
-def test_crypt_bz2_tar(random_path, buff_size, file_size):
+@pytest.mark.parametrize("buff_size, file_size", [
+    (1024 * 32, 1024 * 74 + 31),
+    (1024 * 7, 1024 * 2 + 31),
+    ])
+def test_crypt_bz2_tar(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
-    dataf = os.path.join(random_path, 'test.tbzf')
+    dataf = os.path.join(random_path, 'test%s.tbzf'%random_name)
 
-    dataf1 = os.path.join(random_path, 'file1.out')
+    dataf1 = os.path.join(random_path, 'file1%s.out'%random_name)
     with open(dataf1, "wb") as out:
         out.write(os.urandom(file_size * 5))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size * 50))
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 
     with TarBz2FernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
-        ff.add(dataf1, 'file1.out')
-        ff.add(dataf2, 'file2.out')
+        ff.add(dataf1, 'file1%s.out'%random_name)
+        ff.add(dataf2, 'file2%s.out'%random_name)
 
     os.unlink(dataf1)
     os.unlink(dataf2)
 
     with TarBz2FernetFile(dataf, "r", fernet_key=key) as ff:
-        fdatae = ff.extractfile('file1.out')
+        fdatae = ff.extractfile('file1%s.out'%random_name)
         assert fdatae.read() == ddataf1
-        fdatae = ff.extractfile('file2.out')
+        fdatae = ff.extractfile('file2%s.out'%random_name)
         assert fdatae.read() == ddataf2
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 512 + 31) ])
-def test_crypt_bz2_tar_append(random_path, buff_size, file_size):
+@pytest.mark.parametrize("buff_size, file_size", [
+    (1024 * 32, 1024 * 356 + 31),
+    (1024 * 5, 1024 * 1 + 31),
+    ])
+def test_crypt_bz2_tar_append(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
-    dataf = os.path.join(random_path, 'test.tbzf')
+    dataf = os.path.join(random_path, 'test%s.tbzf'%random_name)
 
-    dataf1 = os.path.join(random_path, 'file1.out')
+    dataf1 = os.path.join(random_path, 'file1%s.out'%random_name)
     with open(dataf1, "wb") as out:
         out.write(os.urandom(file_size * 5))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size * 50))
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 
-    dataf3 = os.path.join(random_path, 'file3.out')
+    dataf3 = os.path.join(random_path, 'file3%s.out'%random_name)
     with open(dataf3, "wb") as out:
         out.write(os.urandom(file_size * 10))
     with open(dataf3, "rb") as ff:
         ddataf3 = ff.read()
 
     with TarBz2FernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
-        ff.add(dataf1, 'file1.out')
-        ff.add(dataf2, 'file2.out')
+        ff.add(dataf1, 'file1%s.out'%random_name)
+        ff.add(dataf2, 'file2%s.out'%random_name)
 
     os.unlink(dataf1)
     os.unlink(dataf2)
@@ -273,7 +285,7 @@ def test_crypt_bz2_tar_append(random_path, buff_size, file_size):
     # Can't append to tar/bz2
     with pytest.raises(io.UnsupportedOperation):
         with TarBz2FernetFile(dataf, mode='a', fernet_key=key, chunk_size=buff_size) as ff:
-            ff.add(dataf3, 'file3.out')
+            ff.add(dataf3, 'file3%s.out'%random_name)
 
     # ~ os.unlink(dataf3)
 
@@ -285,11 +297,11 @@ def test_crypt_bz2_tar_append(random_path, buff_size, file_size):
         # ~ fdatae = ff.extractfile('file3.out')
         # ~ assert fdatae.read() == ddataf3
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 1024 * 1) ])
-def test_crypt_lzma(random_path, buff_size, file_size):
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 16, 1024 * 768 * 1) ])
+def test_crypt_lzma(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
-    dataf = os.path.join(random_path, 'test.frnt')
+    dataf = os.path.join(random_path, 'test%s.frnt'%random_name)
     with LzmaFernetFile(dataf, mode='wb', fernet_key=key, chunk_size=buff_size) as ff:
         ff.write(data)
     with open(dataf, "rb") as ff:
@@ -303,62 +315,62 @@ def test_crypt_lzma(random_path, buff_size, file_size):
         datar = ff.read()
     assert data == datar
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 512 + 31) ])
-def test_crypt_lzma_tar(random_path, buff_size, file_size):
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 8, 1024 * 256 + 31) ])
+def test_crypt_lzma_tar(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
-    dataf = os.path.join(random_path, 'test.tbzf')
+    dataf = os.path.join(random_path, 'test%s.tbzf'%random_name)
 
-    dataf1 = os.path.join(random_path, 'file1.out')
+    dataf1 = os.path.join(random_path, 'file1%s.out'%random_name)
     with open(dataf1, "wb") as out:
         out.write(os.urandom(file_size * 5))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size * 50))
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 
     with TarLzmaFernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
-        ff.add(dataf1, 'file1.out')
-        ff.add(dataf2, 'file2.out')
+        ff.add(dataf1, 'file1%s.out'%random_name)
+        ff.add(dataf2, 'file2%s.out'%random_name)
 
     os.unlink(dataf1)
     os.unlink(dataf2)
 
     with TarLzmaFernetFile(dataf, "r", fernet_key=key) as ff:
-        fdatae = ff.extractfile('file1.out')
+        fdatae = ff.extractfile('file1%s.out'%random_name)
         assert fdatae.read() == ddataf1
-        fdatae = ff.extractfile('file2.out')
+        fdatae = ff.extractfile('file2%s.out'%random_name)
         assert fdatae.read() == ddataf2
 
-@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 512 + 31) ])
-def test_crypt_lzma_tar_append(random_path, buff_size, file_size):
+@pytest.mark.parametrize("buff_size, file_size", [ (1024 * 32, 1024 * 456 + 31) ])
+def test_crypt_lzma_tar_append(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
-    dataf = os.path.join(random_path, 'test.tbzf')
+    dataf = os.path.join(random_path, 'test%s.tbzf'%random_name)
 
-    dataf1 = os.path.join(random_path, 'file1.out')
+    dataf1 = os.path.join(random_path, 'file1%s.out'%random_name)
     with open(dataf1, "wb") as out:
         out.write(os.urandom(file_size * 2))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size * 10))
     with open(dataf2, "rb") as ff:
         ddataf2 = ff.read()
 
-    dataf3 = os.path.join(random_path, 'file3.out')
+    dataf3 = os.path.join(random_path, 'file3%s.out'%random_name)
     with open(dataf3, "wb") as out:
         out.write(os.urandom(file_size * 5))
     with open(dataf3, "rb") as ff:
         ddataf3 = ff.read()
 
     with TarLzmaFernetFile(dataf, mode='w', fernet_key=key, chunk_size=buff_size) as ff:
-        ff.add(dataf1, 'file1.out')
-        ff.add(dataf2, 'file2.out')
+        ff.add(dataf1, 'file1%s.out'%random_name)
+        ff.add(dataf2, 'file2%s.out'%random_name)
 
     os.unlink(dataf1)
     os.unlink(dataf2)
@@ -366,31 +378,31 @@ def test_crypt_lzma_tar_append(random_path, buff_size, file_size):
     # Can't append to tar/bz2
     with pytest.raises(io.UnsupportedOperation):
         with TarLzmaFernetFile(dataf, mode='a', fernet_key=key, chunk_size=buff_size) as ff:
-            ff.add(dataf3, 'file3.out')
+            ff.add(dataf3, 'file3%s.out'%random_name)
 
     # ~ os.unlink(dataf3)
 
     # ~ with TarBz2FernetFile(dataf, "r", fernet_key=key) as ff:
-        # ~ fdatae = ff.extractfile('file1.out')
+        # ~ fdatae = ff.extractfile('file1%s.out'%random_name)
         # ~ assert fdatae.read() == ddataf1
-        # ~ fdatae = ff.extractfile('file2.out')
+        # ~ fdatae = ff.extractfile('file2%s.out'%random_name)
         # ~ assert fdatae.read() == ddataf2
-        # ~ fdatae = ff.extractfile('file3.out')
+        # ~ fdatae = ff.extractfile('file3%s.out'%random_name)
         # ~ assert fdatae.read() == ddataf3
 
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 512 + 1) ])
-def test_crypt_zip(random_path, buff_size, file_size):
+def test_crypt_zip(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
     data = randbytes(file_size)
-    dataf = os.path.join(random_path, 'test.frnz')
+    dataf = os.path.join(random_path, 'test%s.frnz'%random_name)
 
-    dataf1 = os.path.join(random_path, 'file1.out')
+    dataf1 = os.path.join(random_path, 'file1%s.out'%random_name)
     with open(dataf1, "wb") as out:
         out.write(os.urandom(file_size * 5))
     with open(dataf1, "rb") as ff:
         ddataf1 = ff.read()
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size * 50))
     with open(dataf2, "rb") as ff:
@@ -399,14 +411,14 @@ def test_crypt_zip(random_path, buff_size, file_size):
     # Problem with ZipFile
     with pytest.raises(OSError):
         with ZipFernetFile(dataf, mode='w', fernet_key=key) as ff:
-            ff.write(dataf1, arcname='file1.out')
-            ff.write(dataf2, arcname='file2.out')
+            ff.write(dataf1, arcname='file1%s.out'%random_name)
+            ff.write(dataf2, arcname='file2%s.out'%random_name)
 
     # ~ os.unlink(dataf1)
     # ~ os.unlink(dataf2)
 
     # ~ with ZipFernetFile(dataf, "r", fernet_key=key) as ff:
-        # ~ fdatae = ff.extractfile('file1.out')
+        # ~ fdatae = ff.extractfile('file1%s.out'%random_name)
         # ~ assert fdatae.read() == ddataf1
-        # ~ fdatae = ff.extractfile('file2.out')
+        # ~ fdatae = ff.extractfile('file2%s.out'%random_name)
         # ~ assert fdatae.read() == ddataf2

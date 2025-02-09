@@ -19,12 +19,12 @@ from fernetfile.zstd import open as zstd_open
 import pytest
 
 @pytest.mark.parametrize("buff_size, file_size", [ (1024 * 64, 1024 * 512 + 13) ])
-def test_zstd_extract(random_path, buff_size, file_size):
+def test_zstd_extract(random_path, random_name, buff_size, file_size):
     key = Fernet.generate_key()
     fkey = Fernet(key)
-    dataf = os.path.join(random_path, 'test.frtz')
+    dataf = os.path.join(random_path, 'test%s.frtz'%random_name)
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(file_size))
     with open(dataf2, "rb") as ff:
@@ -32,7 +32,7 @@ def test_zstd_extract(random_path, buff_size, file_size):
 
     with TarZstdFernetFile(dataf, mode='wb', fernet_key=key,
             chunk_size=buff_size) as ff:
-        ff.add(dataf2, 'file1.dat')
+        ff.add(dataf2, 'file1%s.dat'%random_name)
         assert repr(ff).startswith('<TarZstdFernet')
 
     with open(dataf, "rb") as ff:
@@ -55,115 +55,115 @@ def test_zstd_extract(random_path, buff_size, file_size):
         datau += fkey.decrypt(chunk)
 
     # Now we have compressed data
-    dataf2 = os.path.join(random_path, 'test.zstd')
+    dataf2 = os.path.join(random_path, 'test%s.zstd'%random_name)
     with open(dataf2, "wb") as out:
         out.write(datau)
     with pyzstd.open(dataf2, "rb") as ff:
         datar = ff.read()
 
     # Now we have tar data
-    dataf3 = os.path.join(random_path, 'test.tar')
+    dataf3 = os.path.join(random_path, 'test%s.tar'%random_name)
     with open(dataf3, "wb") as out:
         out.write(datar)
 
     with tarfile.open(dataf3, "r") as ff:
-        ff.extract('file1.dat')
+        ff.extract('file1%s.dat'%random_name)
 
-    with open('file1.dat', "rb") as ff:
+    with open('file1%s.dat'%random_name, "rb") as ff:
         data1 = ff.read()
     assert data == data1
 
     with TarZstdFernetFile(dataf, "rb", fernet_key=key) as ff:
-        ff.extract('file1.dat')
+        ff.extract('file1%s.dat'%random_name)
 
-    with open('file1.dat', "rb") as ff:
+    with open('file1%s.dat'%random_name, "rb") as ff:
         data1 = ff.read()
     assert data == data1
 
-def test_store_info(random_path):
+def test_store_info(random_path, random_name):
     sinfo = StoreInfo('titi', store_path=random_path)
     assert repr(sinfo).startswith('<FernetStore')
     assert sinfo.mtime is None
 
-def test_store_open(random_path):
+def test_store_open(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(2487)
     data2 = randbytes(1536)
     data2a = randbytes(7415)
-    dataf = os.path.join(random_path, 'test.stzf')
+    dataf = os.path.join(random_path, 'test%s.stzf'%random_name)
 
     with store_open(dataf, mode='wb', fernet_key=key) as ff:
         assert repr(ff).startswith('<FernetStore')
-        ff.write(data, 'file1.data')
-        ff.write(data2, 'file2.data')
+        ff.write(data, 'file1%s.data'%random_name)
+        ff.write(data2, 'file2%s.data'%random_name)
         mtime = ff.mtime
         assert ff.writable
         assert not ff.readable
 
     with store_open(dataf, "rb", fernet_key=key) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 == ff.read('file2.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 == ff.read('file2%s.data'%random_name)
         assert not ff.writable
         assert ff.readable
 
     with open(dataf, "rb") as fdata:
         with store_open(fdata, "rb", fernet_key=key) as ff:
-            assert data == ff.read('file1.data')
-            assert data2 == ff.read('file2.data')
+            assert data == ff.read('file1%s.data'%random_name)
+            assert data2 == ff.read('file2%s.data'%random_name)
             assert not ff.writable
             assert ff.readable
 
-def test_store_basic(random_path):
+def test_store_basic(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(2487)
     data2 = randbytes(1536)
     data2a = randbytes(7415)
-    dataf = os.path.join(random_path, 'test.stzf')
+    dataf = os.path.join(random_path, 'test%s.stzf'%random_name)
 
     with FernetStore(dataf, mode='wb', fernet_key=key) as ff:
         assert repr(ff).startswith('<FernetStore')
-        ff.write(data, 'file1.data')
-        ff.write(data2, 'file2.data')
+        ff.write(data, 'file1%s.data'%random_name)
+        ff.write(data2, 'file2%s.data'%random_name)
         mtime = ff.mtime
         assert ff.writable
         assert not ff.readable
 
     with FernetStore(dataf, "rb", fernet_key=key) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 == ff.read('file2.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 == ff.read('file2%s.data'%random_name)
         assert not ff.writable
         assert ff.readable
 
     data3 = randbytes(6589)
     with FernetStore(dataf, "ab", fernet_key=key) as ff:
-        ff.write(data3, 'file3.data')
+        ff.write(data3, 'file3%s.data'%random_name)
         mtime2 = ff.mtime
 
     assert mtime2 > mtime
 
     with FernetStore(dataf, "r", fernet_key=key) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 == ff.read('file2.data')
-        assert data3 == ff.read('file3.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 == ff.read('file2%s.data'%random_name)
+        assert data3 == ff.read('file3%s.data'%random_name)
 
     with FernetStore(dataf, "ab", fernet_key=key) as ff:
-        ff.delete('file3.data')
-        ff.append(data2a, 'file2.data')
+        ff.delete('file3%s.data'%random_name)
+        ff.append(data2a, 'file2%s.data'%random_name)
 
     with FernetStore(dataf, "rb", fernet_key=key) as ff:
         with pytest.raises(OSError):
-            data = ff.read('file3.data')
+            data = ff.read('file3%s.data'%random_name)
 
     with FernetStore(dataf, "rb", fernet_key=key) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 + data2a == ff.read('file2.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 + data2a == ff.read('file2%s.data'%random_name)
 
     data4 = randbytes(54128)
     with FernetStore(dataf, "ab", fernet_key=key) as ff:
-        ff.write(data3, 'file3.data')
-        ff.write(data4, '4/file.data')
+        ff.write(data3, 'file3%s.data'%random_name)
+        ff.write(data4, '4/file%s.data'%random_name)
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(127 * 50))
     with open(dataf2, "rb") as ff:
@@ -171,44 +171,44 @@ def test_store_basic(random_path):
 
     with FernetStore(dataf, "ab", fernet_key=key) as ff:
         assert ff.modified is False
-        ff.add(dataf2, '5/file.data')
+        ff.add(dataf2, '5/file%s.data'%random_name)
         assert ff.modified is False
 
     fff = None
     with FernetStore(dataf, "rb", fernet_key=key) as ff:
         fff = ff
-        assert data == ff.read('file1.data')
+        assert data == ff.read('file1%s.data'%random_name)
         assert ff.modified is False
-        assert data2 + data2a == ff.read('file2.data')
-        assert data3 == ff.read('file3.data')
-        assert data4 == ff.read('4/file.data')
+        assert data2 + data2a == ff.read('file2%s.data'%random_name)
+        assert data3 == ff.read('file3%s.data'%random_name)
+        assert data4 == ff.read('4/file%s.data'%random_name)
     assert fff.closed is True
 
     with pytest.raises(OSError):
         with FernetStore(dataf, "xb", fernet_key=key) as ff:
-            ff.write(data3, 'file3.data')
+            ff.write(data3, 'file3%s.data'%random_name)
             assert ff.closed is False
 
-def test_store_no_flush(random_path):
+def test_store_no_flush(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(2487)
     data2 = randbytes(1536)
     data2a = randbytes(7415)
-    dataf = os.path.join(random_path, 'test.stzf')
+    dataf = os.path.join(random_path, 'test%s.stzf'%random_name)
 
     with FernetStore(dataf, mode='wb', fernet_key=key, auto_flush=False) as ff:
         assert ff.modified is False
-        ff.write(data, 'file1.data')
+        ff.write(data, 'file1%s.data'%random_name)
         assert ff.modified is True
-        ff.write(data2, 'file2.data')
+        ff.write(data2, 'file2%s.data'%random_name)
         assert ff.writable
         assert not ff.readable
 
     with FernetStore(dataf, "rb", fernet_key=key, auto_flush=False) as ff:
         assert ff.modified is False
-        assert data == ff.read('file1.data')
+        assert data == ff.read('file1%s.data'%random_name)
         assert ff.modified is False
-        assert data2 == ff.read('file2.data')
+        assert data2 == ff.read('file2%s.data'%random_name)
         assert not ff.writable
         assert ff.readable
         mtime = ff.mtime
@@ -216,7 +216,7 @@ def test_store_no_flush(random_path):
     data3 = randbytes(6589)
     with FernetStore(dataf, "ab", fernet_key=key, auto_flush=False,
             backup='.bak') as ff:
-        ff.write(data3, 'file3.data')
+        ff.write(data3, 'file3%s.data'%random_name)
         mtime2 = ff.mtime
         assert mtime2 == mtime
         ff.flush()
@@ -233,19 +233,19 @@ def test_store_no_flush(random_path):
 
     with FernetStore(dataf, "r", fernet_key=key, auto_flush=False) as ff:
         assert ff.modified is False
-        assert data == ff.read('file1.data')
-        assert data2 == ff.read('file2.data')
-        assert data3 == ff.read('file3.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 == ff.read('file2%s.data'%random_name)
+        assert data3 == ff.read('file3%s.data'%random_name)
         assert ff.modified is False
 
     with FernetStore(dataf, "ab", fernet_key=key, auto_flush=False) as ff:
         assert ff.modified is False
-        ff.delete('file3.data')
+        ff.delete('file3%s.data'%random_name)
         assert ff.modified is True
-        ff.append(data2a, 'file2.data')
+        ff.append(data2a, 'file2%s.data'%random_name)
         assert ff.modified is True
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(127 * 50))
     with open(dataf2, "rb") as ff:
@@ -253,88 +253,88 @@ def test_store_no_flush(random_path):
 
     with FernetStore(dataf, "ab", fernet_key=key, auto_flush=False) as ff:
         assert ff.modified is False
-        ff.add(dataf2, '5/file.data')
+        ff.add(dataf2, '5/file%s.data'%random_name)
         assert ff.modified is True
 
     with pytest.raises(FileExistsError):
         with FernetStore(dataf, "ab", fernet_key=key, auto_flush=False) as ff:
-            ff.add(dataf2, '5/file.data', replace=False)
+            ff.add(dataf2, '5/file%s.data'%random_name, replace=False)
 
     with FernetStore(dataf, "ab", fernet_key=key, auto_flush=False) as ff:
         assert ff.modified is False
-        ff.add(dataf2, '5/file.data')
+        ff.add(dataf2, '5/file%s.data'%random_name)
         assert ff.modified is True
 
     with FernetStore(dataf, "rb", fernet_key=key, auto_flush=False) as ff:
         with pytest.raises(OSError):
-            data = ff.read('file3.data')
+            data = ff.read('file3%s.data'%random_name)
 
     with FernetStore(dataf, "rb", fernet_key=key, auto_flush=False) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 + data2a == ff.read('file2.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 + data2a == ff.read('file2%s.data'%random_name)
 
     data4 = randbytes(54128)
     with FernetStore(dataf, "ab", fernet_key=key, auto_flush=False) as ff:
-        ff.write(data3, 'file3.data')
-        ff.write(data4, '4/file.data')
+        ff.write(data3, 'file3%s.data'%random_name)
+        ff.write(data4, '4/file%s.data'%random_name)
 
     fff = None
     with FernetStore(dataf, "rb", fernet_key=key, auto_flush=False) as ff:
         fff = ff
-        assert data == ff.read('file1.data')
+        assert data == ff.read('file1%s.data'%random_name)
         assert ff.modified is False
-        assert data2 + data2a == ff.read('file2.data')
-        assert data3 == ff.read('file3.data')
-        assert data4 == ff.read('4/file.data')
+        assert data2 + data2a == ff.read('file2%s.data'%random_name)
+        assert data3 == ff.read('file3%s.data'%random_name)
+        assert data4 == ff.read('4/file%s.data'%random_name)
     assert fff.closed is True
 
     with pytest.raises(OSError):
         with FernetStore(dataf, "xb", fernet_key=key, auto_flush=False) as ff:
-            ff.write(data3, 'file3.data')
+            ff.write(data3, 'file3%s.data'%random_name)
             assert ff.closed is False
 
-def test_store_exception(random_path):
+def test_store_exception(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(2487)
     data2 = randbytes(1536)
-    dataf = os.path.join(random_path, 'test.stzf')
+    dataf = os.path.join(random_path, 'test%s.stzf'%random_name)
 
     with FernetStore(dataf, mode='wb', fernet_key=key) as ff:
-        ff.write(data, 'file1.data')
+        ff.write(data, 'file1%s.data'%random_name)
         with pytest.raises(FileNotFoundError):
-            ff.add('badfile', 'file2.data')
+            ff.add('badfile', 'file2%s.data'%random_name)
 
     with FernetStore(dataf, "rb", fernet_key=key) as ff:
-        assert data == ff.read('file1.data')
+        assert data == ff.read('file1%s.data'%random_name)
         with pytest.raises(FileNotFoundError):
-            assert data2 == ff.read('file2.data')
+            assert data2 == ff.read('file2%s.data'%random_name)
 
     with pytest.raises(ValueError):
         with FernetStore(dataf, "rb", fernet_key=None) as ff:
-            assert data == ff.read('file1.data')
+            assert data == ff.read('file1%s.data'%random_name)
 
     with pytest.raises(ValueError):
         with FernetStore(None, "rb", fernet_key=key) as ff:
-            assert data == ff.read('file1.data')
+            assert data == ff.read('file1%s.data'%random_name)
 
     with pytest.raises(OSError):
         with FernetStore('notafile.bad', "rb", fernet_key=key) as ff:
             assert ff.mtime is None
-            assert data == ff.read('file1.data')
+            assert data == ff.read('file1%s.data'%random_name)
 
     with pytest.raises(ValueError):
         with FernetStore(dataf, "rt", fernet_key=key) as ff:
-            assert data == ff.read('file1.data')
+            assert data == ff.read('file1%s.data'%random_name)
 
     with pytest.raises(ValueError):
         with FernetStore(dataf, "zz", fernet_key=key) as ff:
-            assert data == ff.read('file1.data')
+            assert data == ff.read('file1%s.data'%random_name)
 
     with pytest.raises(ValueError):
         with FernetStore(dataf, None, fernet_key=key) as ff:
-            assert data == ff.read('file1.data')
+            assert data == ff.read('file1%s.data'%random_name)
 
-def test_store_strings(random_path):
+def test_store_strings(random_path, random_name):
     key = Fernet.generate_key()
     length = 684
     data = [
@@ -343,73 +343,73 @@ def test_store_strings(random_path):
         ''.join(choices(string.ascii_letters + string.digits, k=length)),
         ''.join(choices(string.ascii_letters + string.digits, k=length)),
     ]
-    dataf = os.path.join(random_path, 'test.stzf')
+    dataf = os.path.join(random_path, 'test%s.stzf'%random_name)
 
     with FernetStore(dataf, mode='wb', fernet_key=key) as ff:
-        ff.writelines(data, 'file1.data')
+        ff.writelines(data, 'file1%s.data'%random_name)
 
     with FernetStore(dataf, "rb", fernet_key=key) as ff:
-        assert data == ff.readlines('file1.data')
+        assert data == ff.readlines('file1%s.data'%random_name)
 
-def test_store_secure_basic(random_path):
+def test_store_secure_basic(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(2487)
     data2 = randbytes(1536)
     data2a = randbytes(7415)
-    dataf = os.path.join(random_path, 'test.stzf')
+    dataf = os.path.join(random_path, 'test%s.stzf'%random_name)
 
     with FernetStore(dataf, mode='wb', fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
         assert repr(ff).startswith('<FernetStore')
-        ff.write(data, 'file1.data')
-        ff.write(data2, 'file2.data')
+        ff.write(data, 'file1%s.data'%random_name)
+        ff.write(data2, 'file2%s.data'%random_name)
         mtime = ff.mtime
         assert ff.writable
         assert not ff.readable
 
     with FernetStore(dataf, "rb", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 == ff.read('file2.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 == ff.read('file2%s.data'%random_name)
         assert not ff.writable
         assert ff.readable
 
     data3 = randbytes(6589)
     with FernetStore(dataf, "ab", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-        ff.write(data3, 'file3.data')
+        ff.write(data3, 'file3%s.data'%random_name)
         mtime2 = ff.mtime
 
     assert mtime2 > mtime
 
     with FernetStore(dataf, "r", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 == ff.read('file2.data')
-        assert data3 == ff.read('file3.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 == ff.read('file2%s.data'%random_name)
+        assert data3 == ff.read('file3%s.data'%random_name)
 
     with FernetStore(dataf, "ab", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-        ff.delete('file3.data')
-        ff.append(data2a, 'file2.data')
+        ff.delete('file3%s.data'%random_name)
+        ff.append(data2a, 'file2%s.data'%random_name)
 
     with FernetStore(dataf, "rb", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
         with pytest.raises(OSError):
-            data = ff.read('file3.data')
+            data = ff.read('file3%s.data'%random_name)
 
     with FernetStore(dataf, "rb", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 + data2a == ff.read('file2.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 + data2a == ff.read('file2%s.data'%random_name)
 
     data4 = randbytes(54128)
     with FernetStore(dataf, "ab", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-        ff.write(data3, 'file3.data')
-        ff.write(data4, '4/file.data')
+        ff.write(data3, 'file3%s.data'%random_name)
+        ff.write(data4, '4/file%s.data'%random_name)
 
-    dataf2 = os.path.join(random_path, 'file2.out')
+    dataf2 = os.path.join(random_path, 'file2%s.out'%random_name)
     with open(dataf2, "wb") as out:
         out.write(os.urandom(127 * 50))
     with open(dataf2, "rb") as ff:
@@ -418,52 +418,52 @@ def test_store_secure_basic(random_path):
     with FernetStore(dataf, "ab", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
         assert ff.modified is False
-        ff.add(dataf2, '5/file.data')
+        ff.add(dataf2, '5/file%s.data'%random_name)
         assert ff.modified is False
 
     fff = None
     with FernetStore(dataf, "rb", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
         fff = ff
-        assert data == ff.read('file1.data')
+        assert data == ff.read('file1%s.data'%random_name)
         assert ff.modified is False
-        assert data2 + data2a == ff.read('file2.data')
-        assert data3 == ff.read('file3.data')
-        assert data4 == ff.read('4/file.data')
+        assert data2 + data2a == ff.read('file2%s.data'%random_name)
+        assert data3 == ff.read('file3%s.data'%random_name)
+        assert data4 == ff.read('4/file%s.data'%random_name)
     assert fff.closed is True
 
     with pytest.raises(OSError):
         with FernetStore(dataf, "xb", fernet_key=key,
                 secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-            ff.write(data3, 'file3.data')
+            ff.write(data3, 'file3%s.data'%random_name)
             assert ff.closed is False
 
-    extdir = os.path.join(random_path, 'extract_tar')
+    extdir = os.path.join(random_path, 'extract_tar%s'%random_name)
     os.makedirs(extdir, exist_ok=True)
     with FernetStore(dataf, "rb", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
         ff.extractall(extdir)
 
-def test_store_secure_tmp(random_path):
+def test_store_secure_tmp(random_path, random_name):
     key = Fernet.generate_key()
     data = randbytes(2487)
     data2 = randbytes(1536)
     data2a = randbytes(7415)
-    dataf = os.path.join(random_path, 'test.stzf')
+    dataf = os.path.join(random_path, 'test%s.stzf'%random_name)
 
     with FernetStore(dataf, mode='wb', fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
         assert repr(ff).startswith('<FernetStore')
-        ff.write(data, 'file1.data')
-        ff.write(data2, 'file2.data')
+        ff.write(data, 'file1%s.data'%random_name)
+        ff.write(data2, 'file2%s.data'%random_name)
         mtime = ff.mtime
         assert ff.writable
         assert not ff.readable
 
     with FernetStore(dataf, "rb", fernet_key=key,
             secure_open=zstd_open, secure_params={'fernet_key': key}) as ff:
-        assert data == ff.read('file1.data')
-        assert data2 == ff.read('file2.data')
+        assert data == ff.read('file1%s.data'%random_name)
+        assert data2 == ff.read('file2%s.data'%random_name)
         assert not ff.writable
         assert ff.readable
 
@@ -472,9 +472,9 @@ def test_store_secure_tmp(random_path):
         for member in ff.getmembers():
             with zstd_open(member.path, 'rb', fernet_key=key) as fff:
                 datar = fff.read()
-                if member.name == 'file1.data':
+                if member.name == 'file1%s.data'%random_name:
                     assert data == datar
-                elif member.name == 'file2.data':
+                elif member.name == 'file2%s.data'%random_name:
                     assert data2 == datar
             with pytest.raises(ValueError):
                 with zstd_open(member.path, 'rb', fernet_key=None) as fff:

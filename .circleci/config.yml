@@ -57,7 +57,7 @@ jobs:
             pip install codecov-cli
       - run:
           name: Run tests
-          command: pytest --cov-report xml --junitxml=pytest.<< parameters.python >>.junit.xml -o junit_family=legacy
+          command: pytest -n auto --ignore=tests/test_benchmark.py --cov-report xml --junitxml=pytest.<< parameters.python >>.junit.xml -o junit_family=legacy
       - run:
           name: Run ruff
           command: ruff check --respect-gitignore --output-format junit --output-file ruff.<< parameters.python >>.junit.xml . || true
