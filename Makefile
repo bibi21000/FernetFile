@@ -20,3 +20,9 @@ doc:
 
 pypi:
 	./venv/bin/python3 -m twine upload --repository pypi --verbose dist/*
+
+ruff:
+	./venv/bin/ruff check fernetfile/
+
+bandit:
+	./venv/bin/bandit -r fernetfile

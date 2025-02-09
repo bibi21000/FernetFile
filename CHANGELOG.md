@@ -9,11 +9,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+
+## [0.0.9] - 2025-02-09
+
+### Added
+
 - Add FernetStore and open method
 
 ### Changed
 
-### Removed
+- Fix fileobj propagation
+
 
 ## [0.0.8] - 2025-02-07
 
@@ -28,6 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Change raised exceptions to io.* ones
 
+
 ## [0.0.7] - 2025-02-05
 
 ### Added
@@ -39,11 +50,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Remove unused mtime parameter
 
+
 ## [0.0.6] - 2025-02-05
 
 ### Changed
 
 - Update classifiers
+
 
 ## [0.0.5] - 2025-02-05
 
@@ -57,11 +70,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support for python 3.8
 - Support for python 3.13 (codecov-cli not compatible)
 
+
 ## [0.0.4] - 2025-02-04
 
 ### Changed
 
 - Fix packaging
+
 
 ## [0.0.3] - 2025-02-04
 
@@ -69,6 +84,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Update doc
 - Update test
+
 
 ## [0.0.2] - 2025-02-02
 

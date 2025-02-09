@@ -1,6 +1,6 @@
 [project]
 name = "fernetfile"
-version = "0.0.8"
+version = "0.0.9"
 requires-python = ">= 3.9"
 readme = "README.md"
 description = "A python xxxFile like ( ie GzipFile, BZ2File, ...) for manipulating Fernet encrypted files."
@@ -38,14 +38,15 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 
-#[project.scripts]
-#hello-world = "helloworld.main:main"
+[project.scripts]
+pycoffer = "fernetfile.main:cli"
 
 [project.optional-dependencies]
 test = ["pytest", "coverage[toml]", "pytest-cov", "ruff", "bandit"]
 build = ["build", 'twine']
 zstd = ["pyzstd"]
 store = ["pyzstd", "filelock"]
+cli = ["pyzstd", "filelock", "click"]
 benchmark = ["pytest-ordering"]
 doc = ["pdoc"]
 
