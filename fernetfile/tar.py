@@ -54,13 +54,12 @@ def open(filename, mode="rb", fernet_key=None,
         chunk_size=CHUNK_SIZE,
         level_or_option=None, zstd_dict=None,
         **cryptor_args):
-    """Open a ZstdFernet file in binary or text mode.
+    """Open a ZstdFernet TarFile in binary mode.
 
     The filename argument can be an actual filename (a str or bytes object), or
     an existing file object to read from or write to.
 
-    The mode argument can be "r", "rb", "w", "wb", "x", "xb", "a" or "ab" for
-    binary mode.
+    The mode argument can be "r", "w", "x" or "a" for binary mode.
 
     """
     return _open_cls(filename, mode=mode,

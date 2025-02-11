@@ -40,7 +40,7 @@ def test_buffer_fernet_file(random_path, random_name, chunk_size, file_size):
     dataf = os.path.join(random_path, random_name)
     with fernet_open(dataf, mode='wt', fernet_key=key, chunk_size=chunk_size) as ff:
         ff.write(data)
-    with open(dataf, "rt") as ff:
+    with open(dataf, "rb") as ff:
         datar = ff.read()
     assert data != datar
     with fernet_open(dataf, "rt", fernet_key=key) as ff:
@@ -72,7 +72,7 @@ def test_buffer_fernet_open(random_path, random_name, chunk_size, file_size):
     dataf = os.path.join(random_path, random_name)
     with fernet_open(dataf, mode='wt', fernet_key=key, chunk_size=chunk_size) as ff:
         ff.write(data)
-    with open(dataf, "rt") as ff:
+    with open(dataf, "rb") as ff:
         datar = ff.read()
     assert data != datar
     with fernet_open(dataf, "rt", fernet_key=key) as ff:
