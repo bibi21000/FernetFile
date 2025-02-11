@@ -1,6 +1,6 @@
 [project]
 name = "fernetfile"
-version = "0.0.9"
+version = "0.0.10"
 requires-python = ">= 3.9"
 readme = "README.md"
 description = "A python xxxFile like ( ie GzipFile, BZ2File, ...) for manipulating Fernet encrypted files."
@@ -13,6 +13,7 @@ maintainers = [
 packages = ["fernetfile"]
 dependencies = [
   "cryptography>=43.0.0",
+#  "cofferfile",
 ]
 classifiers = [
   # How mature is this project? Common values are
@@ -38,17 +39,15 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 
-[project.scripts]
-pycoffer = "fernetfile.main:cli"
+[project.entry-points."cofferfile.cryptor"]
+fernet = "fernetfile:FernetCryptor"
 
 [project.optional-dependencies]
-test = ["pytest", "coverage[toml]", "pytest-cov", "pytest-xdist", "ruff", "bandit"]
+test = ["pytest", "coverage[toml]", "pytest-cov", "pytest-xdist",
+ "pytest-random-order", "pytest-mock", "ruff", "bandit"]
+dev = ["cofferfile@git+https://github.com/bibi21000/CofferFile"]
 build = ["build", 'twine']
 zstd = ["pyzstd"]
-pynacl = ["PyNaCl"]
-store = ["pyzstd", "filelock"]
-cli = ["pyzstd", "filelock", "click"]
-benchmark = ["pytest-ordering"]
 doc = ["pdoc"]
 
 [project.urls]

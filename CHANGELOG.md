@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Important !!!
+
+This release break compatibility with old ones because of the change of the size
+of the meta-informations !!! Export all your files before upgrading
+
 ### Added
 
 ### Changed
+
+- Split for support of other cryptographic tools
 
 ### Removed
 

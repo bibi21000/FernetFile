@@ -1,5 +1,5 @@
 #!/usr/bin/make -f
-phony: venv
+.PHONY: venv tests
 
 venv:
 	python3 -m venv venv
@@ -26,3 +26,9 @@ ruff:
 
 bandit:
 	./venv/bin/bandit -r fernetfile
+
+tests:
+	./venv/bin/pytest  --random-order -n auto --ignore=tests/test_benchmark.py tests/
+
+benchmark:
+	./venv/bin/pytest tests/test_benchmark.py
