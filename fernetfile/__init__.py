@@ -13,7 +13,7 @@ __all__ = ["NaclCryptor", "FernetFile", "open"]
 
 import os
 
-from cofferfile import EncryptFile, Cryptor, _open_cls
+from cofferfile import EncryptFile, Cryptor, _open_t
 from cofferfile import WRITE_BUFFER_SIZE, CHUNK_SIZE, READ, WRITE, APPEND, EXCLUSIVE # noqa F401
 from cofferfile.decorator import reify
 
@@ -101,8 +101,7 @@ def open(filename, mode="rb", fernet_key=None,
     Encryption is done by chunks to reduce memory footprint. The default
     chunk_size is 64KB.
     """
-    return _open_cls(filename, mode=mode, chunk_size=chunk_size,
-        encoding=encoding, errors=errors, newline=newline,
-        coffer_cls = FernetFile,
-        level_or_option=level_or_option, zstd_dict=zstd_dict,
-        cryptor='fernet', fernet_key=fernet_key, **cryptor_args)
+    return _open_t(filename, mode=mode,
+         encoding=encoding, errors=errors, newline=newline,
+         chunk_size=chunk_size,
+         cryptor='fernet', fernet_key=fernet_key)
