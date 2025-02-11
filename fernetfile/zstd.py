@@ -98,4 +98,5 @@ def open(filename, mode="rb", fernet_key=None,
     return _open_cls(filename, mode=mode, chunk_size=chunk_size,
         encoding=encoding, errors=errors, newline=newline,
         coffer_cls = FernetFile,
+        level_or_option=level_or_option, zstd_dict=zstd_dict,
         cryptor='fernet', fernet_key=fernet_key, **cryptor_args)
