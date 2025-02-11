@@ -178,5 +178,5 @@ Decrypt :
             fout.write(data)
 ```
 
-## Use the fernet store
+Look at documentation : https://bibi21000.github.io/FernetFile/
 

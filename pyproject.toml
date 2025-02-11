@@ -13,7 +13,7 @@ maintainers = [
 packages = ["fernetfile"]
 dependencies = [
   "cryptography>=43.0.0",
-#  "cofferfile",
+  "cofferfile",
 ]
 classifiers = [
   # How mature is this project? Common values are
@@ -45,7 +45,6 @@ fernet = "fernetfile:FernetCryptor"
 [project.optional-dependencies]
 test = ["pytest", "coverage[toml]", "pytest-cov", "pytest-xdist",
  "pytest-random-order", "pytest-mock", "ruff", "bandit"]
-dev = ["cofferfile@git+https://github.com/bibi21000/CofferFile"]
 build = ["build", 'twine']
 zstd = ["pyzstd"]
 doc = ["pdoc"]

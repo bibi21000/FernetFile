@@ -9,7 +9,7 @@
 __author__ = 'bibi21000 aka Sébastien GALLET'
 __email__ = 'bibi21000@gmail.com'
 
-__all__ = ["NaclCryptor", "FernetFile", "open"]
+__all__ = ["FernetCryptor", "FernetFile", "open"]
 
 import os
 
@@ -17,27 +17,11 @@ from cofferfile import EncryptFile, Cryptor, _open_t
 from cofferfile import WRITE_BUFFER_SIZE, CHUNK_SIZE, READ, WRITE, APPEND, EXCLUSIVE # noqa F401
 from cofferfile.decorator import reify
 
-class FernetCryptor(Cryptor):
-
-    @reify
-    def _imp_cryptography_fernet(cls):
-        """Lazy loader for cryptography.fernet"""
-        import importlib
-        return importlib.import_module('cryptography.fernet')
-
-    def __init__(self, fernet_key=None, **kwargs):
-        super().__init__(**kwargs)
-        if fernet_key is None:
-            raise ValueError("Invalid fernet_key: {!r}".format(fernet_key))
-        self.fernet = self._imp_cryptography_fernet.Fernet(fernet_key)
-
-    def _decrypt(self, chunk):
-        return self.fernet.decrypt(chunk)
-
-    def _encrypt(self, chunk):
-        return self.fernet.encrypt(chunk)
-
 class FernetFile(EncryptFile):
+    """
+    `fernetfile.zstd`
+    `fernetfile.tar`
+    """
 
     def __init__(self, filename=None, mode=None, fileobj=None,
             chunk_size=CHUNK_SIZE, write_buffer_size=WRITE_BUFFER_SIZE,
@@ -77,6 +61,26 @@ class FernetFile(EncryptFile):
     def __repr__(self):
         s = repr(self.myfileobj)
         return '<FernetFile ' + s[1:-1] + ' ' + hex(id(self)) + '>'
+
+class FernetCryptor(Cryptor):
+
+    @reify
+    def _imp_cryptography_fernet(cls):
+        """Lazy loader for cryptography.fernet"""
+        import importlib
+        return importlib.import_module('cryptography.fernet')
+
+    def __init__(self, fernet_key=None, **kwargs):
+        super().__init__(**kwargs)
+        if fernet_key is None:
+            raise ValueError("Invalid fernet_key: {!r}".format(fernet_key))
+        self.fernet = self._imp_cryptography_fernet.Fernet(fernet_key)
+
+    def _decrypt(self, chunk):
+        return self.fernet.decrypt(chunk)
+
+    def _encrypt(self, chunk):
+        return self.fernet.encrypt(chunk)
 
 def open(filename, mode="rb", fernet_key=None,
          encoding=None, errors=None, newline=None,
