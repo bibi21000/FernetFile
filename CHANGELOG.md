@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Removed
+
+
+## [0.1.0] - 2025/02/11
+
 Important !!!
 
 This release break compatibility with old ones because of the change of the size
