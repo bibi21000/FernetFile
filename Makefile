@@ -1,8 +1,14 @@
 #!/usr/bin/make -f
+-include makefile.local
+
+ifndef PYTHON
+PYTHON:=python3
+endif
+
 .PHONY: venv tests
 
 venv:
-	python3 -m venv venv
+	${PYTHON} -m venv venv
 	./venv/bin/pip install .
 	./venv/bin/pip install .[test]
 	./venv/bin/pip install .[zstd]
