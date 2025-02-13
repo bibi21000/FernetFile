@@ -9,14 +9,6 @@ This project is part of the CofferFile : https://github.com/bibi21000/CofferFile
 A python xxxFile like (ie TarFile, GzipFile, BZ2File, pyzstd.ZstdFile, ...)
 for encrypting files with Fernet.
 
- - encrypting / decrypting data using chunks to reduce memory footprint
- - chainable with other python xxxFile interfaces (stream mode)
- - interface to compress/encrypt and decrypt/decompress (with pyzstd) in stream mode
- - a FernetStore with a TarFile like interface (work in progress)
- - look at BENCHMARK.md ... and chain :)
- - look at tests for examples
-
-
 ## Install
 
 ```
@@ -67,7 +59,7 @@ Binary files :
         data = ff.read()
 ```
 
-## Or the fast and furious FernetFile with zstd compression
+## Or compress and crypt them with pyzstd
 
 ```
     pip install fernetfile[zstd]
@@ -152,7 +144,7 @@ Decrypt :
             fout.write(data)
 ```
 
-Or with the fast and furious FernetFile with zstd compression
+Or
 
 Encrypt :
 ```
