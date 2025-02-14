@@ -14,6 +14,7 @@ from pyzstd import ZstdFile
 from pyzstd import CParameter, DParameter # noqa F401
 
 from cofferfile import _open_cls
+from cofferfile.zstd import clean_level_or_option
 from . import CHUNK_SIZE, READ, WRITE, APPEND, EXCLUSIVE # noqa F401
 from . import FernetFile as _FernetFile
 
@@ -64,7 +65,7 @@ class FernetFile(pyzstd.ZstdFile):
             fernet_key=fernet_key, chunk_size=chunk_size)
         try:
             super().__init__(self.fernet_file, zstd_dict=zstd_dict,
-                level_or_option=level_or_option, mode=mode, **kwargs)
+                level_or_option=clean_level_or_option(level_or_option, mode), mode=mode, **kwargs)
         except Exception:
             self.fernet_file.close()
             raise
@@ -80,6 +81,7 @@ class FernetFile(pyzstd.ZstdFile):
         finally:
             if self.fernet_file is not None:
                 self.fernet_file.close()
+
 
 def open(filename, mode="rb", fernet_key=None,
         encoding=None, errors=None, newline=None,
