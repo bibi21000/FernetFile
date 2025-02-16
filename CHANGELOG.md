@@ -10,8 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Add test for small files
+- Add plugins for extending : password
+- Add new coffer types : bank, store, market and null
 
 ### Changed
+
+- Fix problem when reading files in a a writable coffer
 
 ### Removed
 

@@ -4,10 +4,14 @@
 
 # FernetFile
 
+A python xxxFile like (ie TarFile, GzipFile, BZ2File, pyzstd.ZstdFile, ...)
+for encrypting files with cryptography Fernet.
+
 This project is part of the CofferFile : https://github.com/bibi21000/CofferFile
 
-A python xxxFile like (ie TarFile, GzipFile, BZ2File, pyzstd.ZstdFile, ...)
-for encrypting files with Fernet.
+If you're looking for a more powerfull storage for your sensible datas,
+look at PyCoffer : https://github.com/bibi21000/CofferFile.
+
 
 ## Install
 
