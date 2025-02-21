@@ -89,6 +89,8 @@ class FernetCryptor(Cryptor):
         """
         if salt is None:
             salt = self._imp_secrets.token_bytes(16)
+        if isinstance(password, str):
+            password = password.encode()
         kdf = self._imp_cryptography_argon2.Argon2id(
             salt=salt,
             length=key_len,
@@ -96,7 +98,7 @@ class FernetCryptor(Cryptor):
             lanes=lanes,
             memory_cost=memory_cost
         )
-        return kdf.derive(bytes(password,'utf-8'))
+        return kdf.derive(password)
 
     def _decrypt(self, chunk):
         return self.fernet.decrypt(chunk)
