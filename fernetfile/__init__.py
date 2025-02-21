@@ -70,17 +70,41 @@ class FernetCryptor(Cryptor):
         import importlib
         return importlib.import_module('cryptography.fernet')
 
+    @reify
+    def _imp_cryptography_argon2(cls):
+        """Lazy loader for cryptography.hazmat.primitives.kdf.argon2"""
+        import importlib
+        return importlib.import_module('cryptography.hazmat.primitives.kdf.argon2')
+
     def __init__(self, fernet_key=None, **kwargs):
         super().__init__(**kwargs)
         if fernet_key is None:
             raise ValueError("Invalid fernet_key: {!r}".format(fernet_key))
         self.fernet = self._imp_cryptography_fernet.Fernet(fernet_key)
 
+    def derive(self, password, salt=None, key_len=64, iterations=1,
+            lanes=4, memory_cost=64 * 1024):
+        """Derive a key from password (experimental)
+        See https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#argon2id
+        """
+        if salt is None:
+            salt = self._imp_secrets.token_bytes(16)
+        kdf = self._imp_cryptography_argon2.Argon2id(
+            salt=salt,
+            length=key_len,
+            iterations=iterations,
+            lanes=lanes,
+            memory_cost=memory_cost
+        )
+        return kdf.derive(bytes(password,'utf-8'))
+
     def _decrypt(self, chunk):
         return self.fernet.decrypt(chunk)
 
     def _encrypt(self, chunk):
         return self.fernet.encrypt(chunk)
+
+
 
 def open(filename, mode="rb", fernet_key=None,
          encoding=None, errors=None, newline=None,
