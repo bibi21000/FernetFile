@@ -5,14 +5,11 @@
 __author__ = 'bibi21000 aka Sébastien GALLET'
 __email__ = 'bibi21000@gmail.com'
 
-import os
-import sys
-import io
 import tarfile
 
 from cofferfile import _open_cls
 from . import CHUNK_SIZE, READ, WRITE, APPEND, EXCLUSIVE # noqa F401
-from .zstd import FernetFile as ZstdFernetFile, CParameter, DParameter
+from .zstd import FernetFile as ZstdFernetFile
 
 
 class TarFile(tarfile.TarFile):
@@ -25,7 +22,7 @@ class TarFile(tarfile.TarFile):
         ):
         """Init the TarZstdFernetFile"""
         chunk_size = kwargs.pop('chunk_size', CHUNK_SIZE)
-        cryptor = kwargs.pop('cryptor', None)
+        kwargs.pop('cryptor', None)
         self.fernet_file = ZstdFernetFile(name, mode, fileobj=fileobj,
             fernet_key=fernet_key, level_or_option=level_or_option,
                 zstd_dict=zstd_dict, chunk_size=chunk_size)
