@@ -105,7 +105,6 @@ class FernetCryptor(Cryptor):
         return self.fernet.encrypt(chunk)
 
 
-
 def open(filename, mode="rb", fernet_key=None,
          encoding=None, errors=None, newline=None,
          chunk_size=CHUNK_SIZE):
