@@ -39,5 +39,6 @@ tests:
 	./venv/bin/pytest  --random-order -n auto --ignore=tests/test_benchmark.py tests/
 
 release:
+	-git push
 	gh release create v${VERSION}
 
