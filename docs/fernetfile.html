@@ -28,7 +28,7 @@
     <li><a href="#install">Install</a></li>
     <li><a href="#create-your-encryption-key">Create your encryption key</a></li>
     <li><a href="#open-your-encrypted-files-like-normal-files">"open" your encrypted files like normal files</a></li>
-    <li><a href="#or-the-fast-and-furious-fernetfile-with-zstd-compression">Or the fast and furious FernetFile with zstd compression</a></li>
+    <li><a href="#or-compress-and-crypt-them-with-pyzstd">Or compress and crypt them with pyzstd</a></li>
     <li><a href="#and-chain-it-to-tar-and-bz2">And chain it to tar and bz2</a></li>
     <li><a href="#encrypt-decrypt-existing-files">Encrypt / decrypt existing files</a></li>
   </ul></li>
@@ -46,6 +46,9 @@
                         </li>
                         <li>
                                 <a class="variable" href="#FernetCryptor.fernet">fernet</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#FernetCryptor.derive">derive</a>
                         </li>
                 </ul>
 
@@ -83,19 +86,13 @@ fernetfile    </h1>
 
 <h1 id="fernetfile">FernetFile</h1>
 
+<p>A python xxxFile like (ie TarFile, GzipFile, BZ2File, pyzstd.ZstdFile, ...)
+for encrypting files with cryptography Fernet.</p>
+
 <p>This project is part of the CofferFile : <a href="https://github.com/bibi21000/CofferFile">https://github.com/bibi21000/CofferFile</a></p>
 
-<p>A python xxxFile like (ie TarFile, GzipFile, BZ2File, pyzstd.ZstdFile, ...)
-for encrypting files with Fernet.</p>
-
-<ul>
-<li>encrypting / decrypting data using chunks to reduce memory footprint</li>
-<li>chainable with other python xxxFile interfaces (stream mode)</li>
-<li>interface to compress/encrypt and decrypt/decompress (with pyzstd) in stream mode</li>
-<li>a FernetStore with a TarFile like interface (work in progress)</li>
-<li>look at BENCHMARK.md ... and chain :)</li>
-<li>look at tests for examples</li>
-</ul>
+<p>If you're looking for a more powerfull storage for your sensible datas,
+look at PyCoffer : <a href="https://github.com/bibi21000/PyCoffer">https://github.com/bibi21000/PyCoffer</a>.</p>
 
 <h2 id="install">Install</h2>
 
@@ -144,7 +141,7 @@ Losing this key means losing the data.</p>
         data = ff.read()
 </code></pre>
 
-<h2 id="or-the-fast-and-furious-fernetfile-with-zstd-compression">Or the fast and furious FernetFile with zstd compression</h2>
+<h2 id="or-compress-and-crypt-them-with-pyzstd">Or compress and crypt them with pyzstd</h2>
 
 <pre><code>    pip install fernetfile[zstd]
 </code></pre>
@@ -226,7 +223,7 @@ Losing this key means losing the data.</p>
             fout.write(data)
 </code></pre>
 
-<p>Or with the fast and furious FernetFile with zstd compression</p>
+<p>Or</p>
 
 <p>Encrypt :</p>
 
@@ -272,104 +269,136 @@ Losing this key means losing the data.</p>
 </span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a>
 </span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;FernetCryptor&quot;</span><span class="p">,</span> <span class="s2">&quot;FernetFile&quot;</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">]</span>
 </span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a>
-</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>
-</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">cofferfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncryptFile</span><span class="p">,</span> <span class="n">Cryptor</span><span class="p">,</span> <span class="n">_open_t</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">cofferfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span> <span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">READ</span><span class="p">,</span> <span class="n">WRITE</span><span class="p">,</span> <span class="n">APPEND</span><span class="p">,</span> <span class="n">EXCLUSIVE</span> <span class="c1"># noqa F401</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">cofferfile.decorator</span><span class="w"> </span><span class="kn">import</span> <span class="n">reify</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a>
-</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetFile</span><span class="p">(</span><span class="n">EncryptFile</span><span class="p">):</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">    `fernetfile.zstd`</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">    `fernetfile.tar`</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>
-</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a>            <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a>        <span class="p">):</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for the FernetFile class.</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>
-</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a><span class="sd">        At least one of fileobj and filename must be given a</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="sd">        non-trivial value.</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">        The new class instance is based on fileobj, which can be a regular</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">        file, an io.BytesIO object, or any other object which simulates a file.</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">        It defaults to None, in which case filename is opened to provide</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">        a file object.</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>
-</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">        When fileobj is not None, the filename argument is only used to be</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">        included in the gzip file header, which may include the original</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="sd">        filename of the uncompressed file.  It defaults to the filename of</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="sd">        fileobj, if discernible; otherwise, it defaults to the empty string,</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="sd">        and in this case the original filename is not included in the header.</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">        The mode argument can be any of &#39;r&#39;, &#39;rb&#39;, &#39;a&#39;, &#39;ab&#39;, &#39;w&#39;, &#39;wb&#39;, &#39;x&#39;, or</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">        &#39;xb&#39; depending on whether the file will be read or written.  The default</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">        is the mode of fileobj if discernible; otherwise, the default is &#39;rb&#39;.</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">        A mode of &#39;r&#39; is equivalent to one of &#39;rb&#39;, and similarly for &#39;w&#39; and</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">        &#39;wb&#39;, &#39;a&#39; and &#39;ab&#39;, and &#39;x&#39; and &#39;xb&#39;.</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">cofferfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncryptFile</span><span class="p">,</span> <span class="n">Cryptor</span><span class="p">,</span> <span class="n">_open_t</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">cofferfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span> <span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">READ</span><span class="p">,</span> <span class="n">WRITE</span><span class="p">,</span> <span class="n">APPEND</span><span class="p">,</span> <span class="n">EXCLUSIVE</span> <span class="c1"># noqa F401</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">cofferfile.decorator</span><span class="w"> </span><span class="kn">import</span> <span class="n">reify</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetFile</span><span class="p">(</span><span class="n">EncryptFile</span><span class="p">):</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">    `fernetfile.zstd`</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">    `fernetfile.tar`</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>            <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>        <span class="p">):</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for the FernetFile class.</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">        At least one of fileobj and filename must be given a</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">        non-trivial value.</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="sd">        The new class instance is based on fileobj, which can be a regular</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">        file, an io.BytesIO object, or any other object which simulates a file.</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">        It defaults to None, in which case filename is opened to provide</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">        a file object.</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">        When fileobj is not None, the filename argument is only used to be</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="sd">        included in the gzip file header, which may include the original</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">        filename of the uncompressed file.  It defaults to the filename of</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">        fileobj, if discernible; otherwise, it defaults to the empty string,</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="sd">        and in this case the original filename is not included in the header.</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="sd">        The mode argument can be any of &#39;r&#39;, &#39;rb&#39;, &#39;a&#39;, &#39;ab&#39;, &#39;w&#39;, &#39;wb&#39;, &#39;x&#39;, or</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">        &#39;xb&#39; depending on whether the file will be read or written.  The default</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">        is the mode of fileobj if discernible; otherwise, the default is &#39;rb&#39;.</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">        A mode of &#39;r&#39; is equivalent to one of &#39;rb&#39;, and similarly for &#39;w&#39; and</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">        &#39;wb&#39;, &#39;a&#39; and &#39;ab&#39;, and &#39;x&#39; and &#39;xb&#39;.</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">        The fernet_key argument is the Fernet key used to crypt/decrypt data.</span>
 </span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>
-</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">        The fernet_key argument is the Fernet key used to crypt/decrypt data.</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>
-</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">        Encryption is done by chunks to reduce memory footprint. The default</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">        chunk_size is 64KB.</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="n">fileobj</span><span class="p">,</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">write_buffer_size</span><span class="p">,</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>            <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>        <span class="n">s</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myfileobj</span><span class="p">)</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>        <span class="k">return</span> <span class="s1">&#39;&lt;FernetFile &#39;</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">        Encryption is done by chunks to reduce memory footprint. The default</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="sd">        chunk_size is 64KB.</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="n">fileobj</span><span class="p">,</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">write_buffer_size</span><span class="p">,</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>            <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>        <span class="n">s</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myfileobj</span><span class="p">)</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>        <span class="k">return</span> <span class="s1">&#39;&lt;FernetFile &#39;</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetCryptor</span><span class="p">(</span><span class="n">Cryptor</span><span class="p">):</span>
 </span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>
-</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetCryptor</span><span class="p">(</span><span class="n">Cryptor</span><span class="p">):</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>
-</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>    <span class="nd">@reify</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_cryptography_fernet</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for cryptography.fernet&quot;&quot;&quot;</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cryptography.fernet&#39;</span><span class="p">)</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>        <span class="k">if</span> <span class="n">fernet_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fernet_key: </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">))</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_fernet</span><span class="o">.</span><span class="n">Fernet</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">)</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>    <span class="nd">@classmethod</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>    <span class="nd">@reify</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_base64</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for base64&quot;&quot;&quot;</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;base64&#39;</span><span class="p">)</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>    <span class="nd">@reify</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_cryptography_fernet</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for cryptography.fernet&quot;&quot;&quot;</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cryptography.fernet&#39;</span><span class="p">)</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>    <span class="nd">@classmethod</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>    <span class="nd">@reify</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_cryptography_argon2</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for cryptography.hazmat.primitives.kdf.argon2&quot;&quot;&quot;</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cryptography.hazmat.primitives.kdf.argon2&#39;</span><span class="p">)</span>
 </span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>
-</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a><span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">):</span>
-</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a Fernet file in binary or text mode.</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>
-</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a><span class="sd">    The filename argument can be an actual filename (a str or bytes object), or</span>
-</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a><span class="sd">    an existing file object to read from or write to.</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="sd">    The mode argument can be &quot;r&quot;, &quot;rb&quot;, &quot;w&quot;, &quot;wb&quot;, &quot;x&quot;, &quot;xb&quot;, &quot;a&quot; or &quot;ab&quot; for</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="sd">    binary mode, or &quot;rt&quot;, &quot;wt&quot;, &quot;xt&quot; or &quot;at&quot; for text mode. The default mode is</span>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">    &quot;rb&quot;.</span>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="sd">    For binary mode, this function is equivalent to the FernetFile constructor:</span>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">    FernetFile(filename, mode, fernet_key). In this case, the encoding, errors</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">    and newline arguments must not be provided.</span>
-</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>
-</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">    For text mode, a FernetFile object is created, and wrapped in an</span>
-</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="sd">    io.TextIOWrapper instance with the specified encoding, error handling</span>
-</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a><span class="sd">    behavior, and line ending(s).</span>
-</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>
-</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="sd">    Encryption is done by chunks to reduce memory footprint. The default</span>
-</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="sd">    chunk_size is 64KB.</span>
-</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>    <span class="k">return</span> <span class="n">_open_t</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
-</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="n">newline</span><span class="p">,</span>
-</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>         <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>        <span class="k">if</span> <span class="n">fernet_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fernet_key: </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">))</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_fernet</span><span class="o">.</span><span class="n">Fernet</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">)</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>    <span class="nd">@classmethod</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">salt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_len</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>            <span class="n">lanes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">memory_cost</span><span class="o">=</span><span class="mi">64</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive a key from password (experimental)</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">        See https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#argon2id</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>        <span class="k">if</span> <span class="n">salt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>            <span class="n">salt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_secrets</span><span class="o">.</span><span class="n">token_bytes</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>            <span class="n">password</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>        <span class="n">kdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_argon2</span><span class="o">.</span><span class="n">Argon2id</span><span class="p">(</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>            <span class="n">salt</span><span class="o">=</span><span class="n">salt</span><span class="p">,</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>            <span class="n">length</span><span class="o">=</span><span class="n">key_len</span><span class="p">,</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>            <span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">,</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>            <span class="n">lanes</span><span class="o">=</span><span class="n">lanes</span><span class="p">,</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>            <span class="n">memory_cost</span><span class="o">=</span><span class="n">memory_cost</span>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>        <span class="p">)</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>        <span class="k">return</span> <span class="n">salt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">kdf</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="n">password</span><span class="p">))</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a><span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">):</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a Fernet file in binary or text mode.</span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a><span class="sd">    The filename argument can be an actual filename (a str or bytes object), or</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="sd">    an existing file object to read from or write to.</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="sd">    The mode argument can be &quot;r&quot;, &quot;rb&quot;, &quot;w&quot;, &quot;wb&quot;, &quot;x&quot;, &quot;xb&quot;, &quot;a&quot; or &quot;ab&quot; for</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">    binary mode, or &quot;rt&quot;, &quot;wt&quot;, &quot;xt&quot; or &quot;at&quot; for text mode. The default mode is</span>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a><span class="sd">    &quot;rb&quot;.</span>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="sd">    For binary mode, this function is equivalent to the FernetFile constructor:</span>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">    FernetFile(filename, mode, fernet_key). In this case, the encoding, errors</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a><span class="sd">    and newline arguments must not be provided.</span>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a><span class="sd">    For text mode, a FernetFile object is created, and wrapped in an</span>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a><span class="sd">    io.TextIOWrapper instance with the specified encoding, error handling</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a><span class="sd">    behavior, and line ending(s).</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a><span class="sd">    Encryption is done by chunks to reduce memory footprint. The default</span>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a><span class="sd">    chunk_size is 64KB.</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>    <span class="k">return</span> <span class="n">_open_t</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="n">newline</span><span class="p">,</span>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
+</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a>         <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -385,25 +414,58 @@ Losing this key means losing the data.</p>
 
     </div>
     <a class="headerlink" href="#FernetCryptor"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetCryptor-66"><a href="#FernetCryptor-66"><span class="linenos">66</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetCryptor</span><span class="p">(</span><span class="n">Cryptor</span><span class="p">):</span>
-</span><span id="FernetCryptor-67"><a href="#FernetCryptor-67"><span class="linenos">67</span></a>
-</span><span id="FernetCryptor-68"><a href="#FernetCryptor-68"><span class="linenos">68</span></a>    <span class="nd">@reify</span>
-</span><span id="FernetCryptor-69"><a href="#FernetCryptor-69"><span class="linenos">69</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_cryptography_fernet</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
-</span><span id="FernetCryptor-70"><a href="#FernetCryptor-70"><span class="linenos">70</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for cryptography.fernet&quot;&quot;&quot;</span>
-</span><span id="FernetCryptor-71"><a href="#FernetCryptor-71"><span class="linenos">71</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
-</span><span id="FernetCryptor-72"><a href="#FernetCryptor-72"><span class="linenos">72</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cryptography.fernet&#39;</span><span class="p">)</span>
-</span><span id="FernetCryptor-73"><a href="#FernetCryptor-73"><span class="linenos">73</span></a>
-</span><span id="FernetCryptor-74"><a href="#FernetCryptor-74"><span class="linenos">74</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="FernetCryptor-75"><a href="#FernetCryptor-75"><span class="linenos">75</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="FernetCryptor-76"><a href="#FernetCryptor-76"><span class="linenos">76</span></a>        <span class="k">if</span> <span class="n">fernet_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="FernetCryptor-77"><a href="#FernetCryptor-77"><span class="linenos">77</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fernet_key: </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">))</span>
-</span><span id="FernetCryptor-78"><a href="#FernetCryptor-78"><span class="linenos">78</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_fernet</span><span class="o">.</span><span class="n">Fernet</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">)</span>
-</span><span id="FernetCryptor-79"><a href="#FernetCryptor-79"><span class="linenos">79</span></a>
-</span><span id="FernetCryptor-80"><a href="#FernetCryptor-80"><span class="linenos">80</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
-</span><span id="FernetCryptor-81"><a href="#FernetCryptor-81"><span class="linenos">81</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
-</span><span id="FernetCryptor-82"><a href="#FernetCryptor-82"><span class="linenos">82</span></a>
-</span><span id="FernetCryptor-83"><a href="#FernetCryptor-83"><span class="linenos">83</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
-</span><span id="FernetCryptor-84"><a href="#FernetCryptor-84"><span class="linenos">84</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetCryptor-64"><a href="#FernetCryptor-64"><span class="linenos"> 64</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetCryptor</span><span class="p">(</span><span class="n">Cryptor</span><span class="p">):</span>
+</span><span id="FernetCryptor-65"><a href="#FernetCryptor-65"><span class="linenos"> 65</span></a>
+</span><span id="FernetCryptor-66"><a href="#FernetCryptor-66"><span class="linenos"> 66</span></a>    <span class="nd">@classmethod</span>
+</span><span id="FernetCryptor-67"><a href="#FernetCryptor-67"><span class="linenos"> 67</span></a>    <span class="nd">@reify</span>
+</span><span id="FernetCryptor-68"><a href="#FernetCryptor-68"><span class="linenos"> 68</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_base64</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="FernetCryptor-69"><a href="#FernetCryptor-69"><span class="linenos"> 69</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for base64&quot;&quot;&quot;</span>
+</span><span id="FernetCryptor-70"><a href="#FernetCryptor-70"><span class="linenos"> 70</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+</span><span id="FernetCryptor-71"><a href="#FernetCryptor-71"><span class="linenos"> 71</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;base64&#39;</span><span class="p">)</span>
+</span><span id="FernetCryptor-72"><a href="#FernetCryptor-72"><span class="linenos"> 72</span></a>
+</span><span id="FernetCryptor-73"><a href="#FernetCryptor-73"><span class="linenos"> 73</span></a>    <span class="nd">@reify</span>
+</span><span id="FernetCryptor-74"><a href="#FernetCryptor-74"><span class="linenos"> 74</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_cryptography_fernet</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="FernetCryptor-75"><a href="#FernetCryptor-75"><span class="linenos"> 75</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for cryptography.fernet&quot;&quot;&quot;</span>
+</span><span id="FernetCryptor-76"><a href="#FernetCryptor-76"><span class="linenos"> 76</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+</span><span id="FernetCryptor-77"><a href="#FernetCryptor-77"><span class="linenos"> 77</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cryptography.fernet&#39;</span><span class="p">)</span>
+</span><span id="FernetCryptor-78"><a href="#FernetCryptor-78"><span class="linenos"> 78</span></a>
+</span><span id="FernetCryptor-79"><a href="#FernetCryptor-79"><span class="linenos"> 79</span></a>    <span class="nd">@classmethod</span>
+</span><span id="FernetCryptor-80"><a href="#FernetCryptor-80"><span class="linenos"> 80</span></a>    <span class="nd">@reify</span>
+</span><span id="FernetCryptor-81"><a href="#FernetCryptor-81"><span class="linenos"> 81</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_imp_cryptography_argon2</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="FernetCryptor-82"><a href="#FernetCryptor-82"><span class="linenos"> 82</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Lazy loader for cryptography.hazmat.primitives.kdf.argon2&quot;&quot;&quot;</span>
+</span><span id="FernetCryptor-83"><a href="#FernetCryptor-83"><span class="linenos"> 83</span></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+</span><span id="FernetCryptor-84"><a href="#FernetCryptor-84"><span class="linenos"> 84</span></a>        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cryptography.hazmat.primitives.kdf.argon2&#39;</span><span class="p">)</span>
+</span><span id="FernetCryptor-85"><a href="#FernetCryptor-85"><span class="linenos"> 85</span></a>
+</span><span id="FernetCryptor-86"><a href="#FernetCryptor-86"><span class="linenos"> 86</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="FernetCryptor-87"><a href="#FernetCryptor-87"><span class="linenos"> 87</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="FernetCryptor-88"><a href="#FernetCryptor-88"><span class="linenos"> 88</span></a>        <span class="k">if</span> <span class="n">fernet_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="FernetCryptor-89"><a href="#FernetCryptor-89"><span class="linenos"> 89</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fernet_key: </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">))</span>
+</span><span id="FernetCryptor-90"><a href="#FernetCryptor-90"><span class="linenos"> 90</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_fernet</span><span class="o">.</span><span class="n">Fernet</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">)</span>
+</span><span id="FernetCryptor-91"><a href="#FernetCryptor-91"><span class="linenos"> 91</span></a>
+</span><span id="FernetCryptor-92"><a href="#FernetCryptor-92"><span class="linenos"> 92</span></a>    <span class="nd">@classmethod</span>
+</span><span id="FernetCryptor-93"><a href="#FernetCryptor-93"><span class="linenos"> 93</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">salt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_len</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="FernetCryptor-94"><a href="#FernetCryptor-94"><span class="linenos"> 94</span></a>            <span class="n">lanes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">memory_cost</span><span class="o">=</span><span class="mi">64</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+</span><span id="FernetCryptor-95"><a href="#FernetCryptor-95"><span class="linenos"> 95</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive a key from password (experimental)</span>
+</span><span id="FernetCryptor-96"><a href="#FernetCryptor-96"><span class="linenos"> 96</span></a><span class="sd">        See https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#argon2id</span>
+</span><span id="FernetCryptor-97"><a href="#FernetCryptor-97"><span class="linenos"> 97</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="FernetCryptor-98"><a href="#FernetCryptor-98"><span class="linenos"> 98</span></a>        <span class="k">if</span> <span class="n">salt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="FernetCryptor-99"><a href="#FernetCryptor-99"><span class="linenos"> 99</span></a>            <span class="n">salt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_secrets</span><span class="o">.</span><span class="n">token_bytes</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="FernetCryptor-100"><a href="#FernetCryptor-100"><span class="linenos">100</span></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="FernetCryptor-101"><a href="#FernetCryptor-101"><span class="linenos">101</span></a>            <span class="n">password</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span><span id="FernetCryptor-102"><a href="#FernetCryptor-102"><span class="linenos">102</span></a>        <span class="n">kdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_argon2</span><span class="o">.</span><span class="n">Argon2id</span><span class="p">(</span>
+</span><span id="FernetCryptor-103"><a href="#FernetCryptor-103"><span class="linenos">103</span></a>            <span class="n">salt</span><span class="o">=</span><span class="n">salt</span><span class="p">,</span>
+</span><span id="FernetCryptor-104"><a href="#FernetCryptor-104"><span class="linenos">104</span></a>            <span class="n">length</span><span class="o">=</span><span class="n">key_len</span><span class="p">,</span>
+</span><span id="FernetCryptor-105"><a href="#FernetCryptor-105"><span class="linenos">105</span></a>            <span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">,</span>
+</span><span id="FernetCryptor-106"><a href="#FernetCryptor-106"><span class="linenos">106</span></a>            <span class="n">lanes</span><span class="o">=</span><span class="n">lanes</span><span class="p">,</span>
+</span><span id="FernetCryptor-107"><a href="#FernetCryptor-107"><span class="linenos">107</span></a>            <span class="n">memory_cost</span><span class="o">=</span><span class="n">memory_cost</span>
+</span><span id="FernetCryptor-108"><a href="#FernetCryptor-108"><span class="linenos">108</span></a>        <span class="p">)</span>
+</span><span id="FernetCryptor-109"><a href="#FernetCryptor-109"><span class="linenos">109</span></a>        <span class="k">return</span> <span class="n">salt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">kdf</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="n">password</span><span class="p">))</span>
+</span><span id="FernetCryptor-110"><a href="#FernetCryptor-110"><span class="linenos">110</span></a>
+</span><span id="FernetCryptor-111"><a href="#FernetCryptor-111"><span class="linenos">111</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
+</span><span id="FernetCryptor-112"><a href="#FernetCryptor-112"><span class="linenos">112</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span id="FernetCryptor-113"><a href="#FernetCryptor-113"><span class="linenos">113</span></a>
+</span><span id="FernetCryptor-114"><a href="#FernetCryptor-114"><span class="linenos">114</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
+</span><span id="FernetCryptor-115"><a href="#FernetCryptor-115"><span class="linenos">115</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -419,11 +481,11 @@ Losing this key means losing the data.</p>
 
     </div>
     <a class="headerlink" href="#FernetCryptor.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetCryptor.__init__-74"><a href="#FernetCryptor.__init__-74"><span class="linenos">74</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="FernetCryptor.__init__-75"><a href="#FernetCryptor.__init__-75"><span class="linenos">75</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="FernetCryptor.__init__-76"><a href="#FernetCryptor.__init__-76"><span class="linenos">76</span></a>        <span class="k">if</span> <span class="n">fernet_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="FernetCryptor.__init__-77"><a href="#FernetCryptor.__init__-77"><span class="linenos">77</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fernet_key: </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">))</span>
-</span><span id="FernetCryptor.__init__-78"><a href="#FernetCryptor.__init__-78"><span class="linenos">78</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_fernet</span><span class="o">.</span><span class="n">Fernet</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetCryptor.__init__-86"><a href="#FernetCryptor.__init__-86"><span class="linenos">86</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="FernetCryptor.__init__-87"><a href="#FernetCryptor.__init__-87"><span class="linenos">87</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="FernetCryptor.__init__-88"><a href="#FernetCryptor.__init__-88"><span class="linenos">88</span></a>        <span class="k">if</span> <span class="n">fernet_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="FernetCryptor.__init__-89"><a href="#FernetCryptor.__init__-89"><span class="linenos">89</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fernet_key: </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">))</span>
+</span><span id="FernetCryptor.__init__-90"><a href="#FernetCryptor.__init__-90"><span class="linenos">90</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">fernet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_fernet</span><span class="o">.</span><span class="n">Fernet</span><span class="p">(</span><span class="n">fernet_key</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -441,6 +503,45 @@ Losing this key means losing the data.</p>
     
 
                             </div>
+                            <div id="FernetCryptor.derive" class="classattr">
+                                        <input id="FernetCryptor.derive-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator decorator-classmethod">@classmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">derive</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">password</span>,</span><span class="param">	<span class="n">salt</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">key_len</span><span class="o">=</span><span class="mi">32</span>,</span><span class="param">	<span class="n">iterations</span><span class="o">=</span><span class="mi">1</span>,</span><span class="param">	<span class="n">lanes</span><span class="o">=</span><span class="mi">4</span>,</span><span class="param">	<span class="n">memory_cost</span><span class="o">=</span><span class="mi">65536</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="FernetCryptor.derive-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#FernetCryptor.derive"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetCryptor.derive-92"><a href="#FernetCryptor.derive-92"><span class="linenos"> 92</span></a>    <span class="nd">@classmethod</span>
+</span><span id="FernetCryptor.derive-93"><a href="#FernetCryptor.derive-93"><span class="linenos"> 93</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">salt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_len</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="FernetCryptor.derive-94"><a href="#FernetCryptor.derive-94"><span class="linenos"> 94</span></a>            <span class="n">lanes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">memory_cost</span><span class="o">=</span><span class="mi">64</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+</span><span id="FernetCryptor.derive-95"><a href="#FernetCryptor.derive-95"><span class="linenos"> 95</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive a key from password (experimental)</span>
+</span><span id="FernetCryptor.derive-96"><a href="#FernetCryptor.derive-96"><span class="linenos"> 96</span></a><span class="sd">        See https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#argon2id</span>
+</span><span id="FernetCryptor.derive-97"><a href="#FernetCryptor.derive-97"><span class="linenos"> 97</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="FernetCryptor.derive-98"><a href="#FernetCryptor.derive-98"><span class="linenos"> 98</span></a>        <span class="k">if</span> <span class="n">salt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="FernetCryptor.derive-99"><a href="#FernetCryptor.derive-99"><span class="linenos"> 99</span></a>            <span class="n">salt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_secrets</span><span class="o">.</span><span class="n">token_bytes</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="FernetCryptor.derive-100"><a href="#FernetCryptor.derive-100"><span class="linenos">100</span></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="FernetCryptor.derive-101"><a href="#FernetCryptor.derive-101"><span class="linenos">101</span></a>            <span class="n">password</span> <span class="o">=</span> <span class="n">password</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span><span id="FernetCryptor.derive-102"><a href="#FernetCryptor.derive-102"><span class="linenos">102</span></a>        <span class="n">kdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_cryptography_argon2</span><span class="o">.</span><span class="n">Argon2id</span><span class="p">(</span>
+</span><span id="FernetCryptor.derive-103"><a href="#FernetCryptor.derive-103"><span class="linenos">103</span></a>            <span class="n">salt</span><span class="o">=</span><span class="n">salt</span><span class="p">,</span>
+</span><span id="FernetCryptor.derive-104"><a href="#FernetCryptor.derive-104"><span class="linenos">104</span></a>            <span class="n">length</span><span class="o">=</span><span class="n">key_len</span><span class="p">,</span>
+</span><span id="FernetCryptor.derive-105"><a href="#FernetCryptor.derive-105"><span class="linenos">105</span></a>            <span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">,</span>
+</span><span id="FernetCryptor.derive-106"><a href="#FernetCryptor.derive-106"><span class="linenos">106</span></a>            <span class="n">lanes</span><span class="o">=</span><span class="n">lanes</span><span class="p">,</span>
+</span><span id="FernetCryptor.derive-107"><a href="#FernetCryptor.derive-107"><span class="linenos">107</span></a>            <span class="n">memory_cost</span><span class="o">=</span><span class="n">memory_cost</span>
+</span><span id="FernetCryptor.derive-108"><a href="#FernetCryptor.derive-108"><span class="linenos">108</span></a>        <span class="p">)</span>
+</span><span id="FernetCryptor.derive-109"><a href="#FernetCryptor.derive-109"><span class="linenos">109</span></a>        <span class="k">return</span> <span class="n">salt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imp_base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">kdf</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="n">password</span><span class="p">))</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Derive a key from password (experimental)
+See <a href="https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#argon2id">https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#argon2id</a></p>
+</div>
+
+
+                            </div>
                 </section>
                 <section id="FernetFile">
                             <input id="FernetFile-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -453,50 +554,50 @@ Losing this key means losing the data.</p>
 
     </div>
     <a class="headerlink" href="#FernetFile"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetFile-21"><a href="#FernetFile-21"><span class="linenos">21</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetFile</span><span class="p">(</span><span class="n">EncryptFile</span><span class="p">):</span>
-</span><span id="FernetFile-22"><a href="#FernetFile-22"><span class="linenos">22</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="FernetFile-23"><a href="#FernetFile-23"><span class="linenos">23</span></a><span class="sd">    `fernetfile.zstd`</span>
-</span><span id="FernetFile-24"><a href="#FernetFile-24"><span class="linenos">24</span></a><span class="sd">    `fernetfile.tar`</span>
-</span><span id="FernetFile-25"><a href="#FernetFile-25"><span class="linenos">25</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="FernetFile-26"><a href="#FernetFile-26"><span class="linenos">26</span></a>
-</span><span id="FernetFile-27"><a href="#FernetFile-27"><span class="linenos">27</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="FernetFile-28"><a href="#FernetFile-28"><span class="linenos">28</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span>
-</span><span id="FernetFile-29"><a href="#FernetFile-29"><span class="linenos">29</span></a>            <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="FernetFile-30"><a href="#FernetFile-30"><span class="linenos">30</span></a>        <span class="p">):</span>
-</span><span id="FernetFile-31"><a href="#FernetFile-31"><span class="linenos">31</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for the FernetFile class.</span>
-</span><span id="FernetFile-32"><a href="#FernetFile-32"><span class="linenos">32</span></a>
-</span><span id="FernetFile-33"><a href="#FernetFile-33"><span class="linenos">33</span></a><span class="sd">        At least one of fileobj and filename must be given a</span>
-</span><span id="FernetFile-34"><a href="#FernetFile-34"><span class="linenos">34</span></a><span class="sd">        non-trivial value.</span>
-</span><span id="FernetFile-35"><a href="#FernetFile-35"><span class="linenos">35</span></a>
-</span><span id="FernetFile-36"><a href="#FernetFile-36"><span class="linenos">36</span></a><span class="sd">        The new class instance is based on fileobj, which can be a regular</span>
-</span><span id="FernetFile-37"><a href="#FernetFile-37"><span class="linenos">37</span></a><span class="sd">        file, an io.BytesIO object, or any other object which simulates a file.</span>
-</span><span id="FernetFile-38"><a href="#FernetFile-38"><span class="linenos">38</span></a><span class="sd">        It defaults to None, in which case filename is opened to provide</span>
-</span><span id="FernetFile-39"><a href="#FernetFile-39"><span class="linenos">39</span></a><span class="sd">        a file object.</span>
-</span><span id="FernetFile-40"><a href="#FernetFile-40"><span class="linenos">40</span></a>
-</span><span id="FernetFile-41"><a href="#FernetFile-41"><span class="linenos">41</span></a><span class="sd">        When fileobj is not None, the filename argument is only used to be</span>
-</span><span id="FernetFile-42"><a href="#FernetFile-42"><span class="linenos">42</span></a><span class="sd">        included in the gzip file header, which may include the original</span>
-</span><span id="FernetFile-43"><a href="#FernetFile-43"><span class="linenos">43</span></a><span class="sd">        filename of the uncompressed file.  It defaults to the filename of</span>
-</span><span id="FernetFile-44"><a href="#FernetFile-44"><span class="linenos">44</span></a><span class="sd">        fileobj, if discernible; otherwise, it defaults to the empty string,</span>
-</span><span id="FernetFile-45"><a href="#FernetFile-45"><span class="linenos">45</span></a><span class="sd">        and in this case the original filename is not included in the header.</span>
-</span><span id="FernetFile-46"><a href="#FernetFile-46"><span class="linenos">46</span></a>
-</span><span id="FernetFile-47"><a href="#FernetFile-47"><span class="linenos">47</span></a><span class="sd">        The mode argument can be any of &#39;r&#39;, &#39;rb&#39;, &#39;a&#39;, &#39;ab&#39;, &#39;w&#39;, &#39;wb&#39;, &#39;x&#39;, or</span>
-</span><span id="FernetFile-48"><a href="#FernetFile-48"><span class="linenos">48</span></a><span class="sd">        &#39;xb&#39; depending on whether the file will be read or written.  The default</span>
-</span><span id="FernetFile-49"><a href="#FernetFile-49"><span class="linenos">49</span></a><span class="sd">        is the mode of fileobj if discernible; otherwise, the default is &#39;rb&#39;.</span>
-</span><span id="FernetFile-50"><a href="#FernetFile-50"><span class="linenos">50</span></a><span class="sd">        A mode of &#39;r&#39; is equivalent to one of &#39;rb&#39;, and similarly for &#39;w&#39; and</span>
-</span><span id="FernetFile-51"><a href="#FernetFile-51"><span class="linenos">51</span></a><span class="sd">        &#39;wb&#39;, &#39;a&#39; and &#39;ab&#39;, and &#39;x&#39; and &#39;xb&#39;.</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetFile-19"><a href="#FernetFile-19"><span class="linenos">19</span></a><span class="k">class</span><span class="w"> </span><span class="nc">FernetFile</span><span class="p">(</span><span class="n">EncryptFile</span><span class="p">):</span>
+</span><span id="FernetFile-20"><a href="#FernetFile-20"><span class="linenos">20</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="FernetFile-21"><a href="#FernetFile-21"><span class="linenos">21</span></a><span class="sd">    `fernetfile.zstd`</span>
+</span><span id="FernetFile-22"><a href="#FernetFile-22"><span class="linenos">22</span></a><span class="sd">    `fernetfile.tar`</span>
+</span><span id="FernetFile-23"><a href="#FernetFile-23"><span class="linenos">23</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="FernetFile-24"><a href="#FernetFile-24"><span class="linenos">24</span></a>
+</span><span id="FernetFile-25"><a href="#FernetFile-25"><span class="linenos">25</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="FernetFile-26"><a href="#FernetFile-26"><span class="linenos">26</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span>
+</span><span id="FernetFile-27"><a href="#FernetFile-27"><span class="linenos">27</span></a>            <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="FernetFile-28"><a href="#FernetFile-28"><span class="linenos">28</span></a>        <span class="p">):</span>
+</span><span id="FernetFile-29"><a href="#FernetFile-29"><span class="linenos">29</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for the FernetFile class.</span>
+</span><span id="FernetFile-30"><a href="#FernetFile-30"><span class="linenos">30</span></a>
+</span><span id="FernetFile-31"><a href="#FernetFile-31"><span class="linenos">31</span></a><span class="sd">        At least one of fileobj and filename must be given a</span>
+</span><span id="FernetFile-32"><a href="#FernetFile-32"><span class="linenos">32</span></a><span class="sd">        non-trivial value.</span>
+</span><span id="FernetFile-33"><a href="#FernetFile-33"><span class="linenos">33</span></a>
+</span><span id="FernetFile-34"><a href="#FernetFile-34"><span class="linenos">34</span></a><span class="sd">        The new class instance is based on fileobj, which can be a regular</span>
+</span><span id="FernetFile-35"><a href="#FernetFile-35"><span class="linenos">35</span></a><span class="sd">        file, an io.BytesIO object, or any other object which simulates a file.</span>
+</span><span id="FernetFile-36"><a href="#FernetFile-36"><span class="linenos">36</span></a><span class="sd">        It defaults to None, in which case filename is opened to provide</span>
+</span><span id="FernetFile-37"><a href="#FernetFile-37"><span class="linenos">37</span></a><span class="sd">        a file object.</span>
+</span><span id="FernetFile-38"><a href="#FernetFile-38"><span class="linenos">38</span></a>
+</span><span id="FernetFile-39"><a href="#FernetFile-39"><span class="linenos">39</span></a><span class="sd">        When fileobj is not None, the filename argument is only used to be</span>
+</span><span id="FernetFile-40"><a href="#FernetFile-40"><span class="linenos">40</span></a><span class="sd">        included in the gzip file header, which may include the original</span>
+</span><span id="FernetFile-41"><a href="#FernetFile-41"><span class="linenos">41</span></a><span class="sd">        filename of the uncompressed file.  It defaults to the filename of</span>
+</span><span id="FernetFile-42"><a href="#FernetFile-42"><span class="linenos">42</span></a><span class="sd">        fileobj, if discernible; otherwise, it defaults to the empty string,</span>
+</span><span id="FernetFile-43"><a href="#FernetFile-43"><span class="linenos">43</span></a><span class="sd">        and in this case the original filename is not included in the header.</span>
+</span><span id="FernetFile-44"><a href="#FernetFile-44"><span class="linenos">44</span></a>
+</span><span id="FernetFile-45"><a href="#FernetFile-45"><span class="linenos">45</span></a><span class="sd">        The mode argument can be any of &#39;r&#39;, &#39;rb&#39;, &#39;a&#39;, &#39;ab&#39;, &#39;w&#39;, &#39;wb&#39;, &#39;x&#39;, or</span>
+</span><span id="FernetFile-46"><a href="#FernetFile-46"><span class="linenos">46</span></a><span class="sd">        &#39;xb&#39; depending on whether the file will be read or written.  The default</span>
+</span><span id="FernetFile-47"><a href="#FernetFile-47"><span class="linenos">47</span></a><span class="sd">        is the mode of fileobj if discernible; otherwise, the default is &#39;rb&#39;.</span>
+</span><span id="FernetFile-48"><a href="#FernetFile-48"><span class="linenos">48</span></a><span class="sd">        A mode of &#39;r&#39; is equivalent to one of &#39;rb&#39;, and similarly for &#39;w&#39; and</span>
+</span><span id="FernetFile-49"><a href="#FernetFile-49"><span class="linenos">49</span></a><span class="sd">        &#39;wb&#39;, &#39;a&#39; and &#39;ab&#39;, and &#39;x&#39; and &#39;xb&#39;.</span>
+</span><span id="FernetFile-50"><a href="#FernetFile-50"><span class="linenos">50</span></a>
+</span><span id="FernetFile-51"><a href="#FernetFile-51"><span class="linenos">51</span></a><span class="sd">        The fernet_key argument is the Fernet key used to crypt/decrypt data.</span>
 </span><span id="FernetFile-52"><a href="#FernetFile-52"><span class="linenos">52</span></a>
-</span><span id="FernetFile-53"><a href="#FernetFile-53"><span class="linenos">53</span></a><span class="sd">        The fernet_key argument is the Fernet key used to crypt/decrypt data.</span>
-</span><span id="FernetFile-54"><a href="#FernetFile-54"><span class="linenos">54</span></a>
-</span><span id="FernetFile-55"><a href="#FernetFile-55"><span class="linenos">55</span></a><span class="sd">        Encryption is done by chunks to reduce memory footprint. The default</span>
-</span><span id="FernetFile-56"><a href="#FernetFile-56"><span class="linenos">56</span></a><span class="sd">        chunk_size is 64KB.</span>
-</span><span id="FernetFile-57"><a href="#FernetFile-57"><span class="linenos">57</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="FernetFile-58"><a href="#FernetFile-58"><span class="linenos">58</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="n">fileobj</span><span class="p">,</span>
-</span><span id="FernetFile-59"><a href="#FernetFile-59"><span class="linenos">59</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">write_buffer_size</span><span class="p">,</span>
-</span><span id="FernetFile-60"><a href="#FernetFile-60"><span class="linenos">60</span></a>            <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
-</span><span id="FernetFile-61"><a href="#FernetFile-61"><span class="linenos">61</span></a>
-</span><span id="FernetFile-62"><a href="#FernetFile-62"><span class="linenos">62</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="FernetFile-63"><a href="#FernetFile-63"><span class="linenos">63</span></a>        <span class="n">s</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myfileobj</span><span class="p">)</span>
-</span><span id="FernetFile-64"><a href="#FernetFile-64"><span class="linenos">64</span></a>        <span class="k">return</span> <span class="s1">&#39;&lt;FernetFile &#39;</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span>
+</span><span id="FernetFile-53"><a href="#FernetFile-53"><span class="linenos">53</span></a><span class="sd">        Encryption is done by chunks to reduce memory footprint. The default</span>
+</span><span id="FernetFile-54"><a href="#FernetFile-54"><span class="linenos">54</span></a><span class="sd">        chunk_size is 64KB.</span>
+</span><span id="FernetFile-55"><a href="#FernetFile-55"><span class="linenos">55</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="FernetFile-56"><a href="#FernetFile-56"><span class="linenos">56</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="n">fileobj</span><span class="p">,</span>
+</span><span id="FernetFile-57"><a href="#FernetFile-57"><span class="linenos">57</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">write_buffer_size</span><span class="p">,</span>
+</span><span id="FernetFile-58"><a href="#FernetFile-58"><span class="linenos">58</span></a>            <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
+</span><span id="FernetFile-59"><a href="#FernetFile-59"><span class="linenos">59</span></a>
+</span><span id="FernetFile-60"><a href="#FernetFile-60"><span class="linenos">60</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="FernetFile-61"><a href="#FernetFile-61"><span class="linenos">61</span></a>        <span class="n">s</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myfileobj</span><span class="p">)</span>
+</span><span id="FernetFile-62"><a href="#FernetFile-62"><span class="linenos">62</span></a>        <span class="k">return</span> <span class="s1">&#39;&lt;FernetFile &#39;</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span>
 </span></pre></div>
 
 
@@ -515,40 +616,40 @@ Losing this key means losing the data.</p>
 
     </div>
     <a class="headerlink" href="#FernetFile.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetFile.__init__-27"><a href="#FernetFile.__init__-27"><span class="linenos">27</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="FernetFile.__init__-28"><a href="#FernetFile.__init__-28"><span class="linenos">28</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span>
-</span><span id="FernetFile.__init__-29"><a href="#FernetFile.__init__-29"><span class="linenos">29</span></a>            <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="FernetFile.__init__-30"><a href="#FernetFile.__init__-30"><span class="linenos">30</span></a>        <span class="p">):</span>
-</span><span id="FernetFile.__init__-31"><a href="#FernetFile.__init__-31"><span class="linenos">31</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for the FernetFile class.</span>
-</span><span id="FernetFile.__init__-32"><a href="#FernetFile.__init__-32"><span class="linenos">32</span></a>
-</span><span id="FernetFile.__init__-33"><a href="#FernetFile.__init__-33"><span class="linenos">33</span></a><span class="sd">        At least one of fileobj and filename must be given a</span>
-</span><span id="FernetFile.__init__-34"><a href="#FernetFile.__init__-34"><span class="linenos">34</span></a><span class="sd">        non-trivial value.</span>
-</span><span id="FernetFile.__init__-35"><a href="#FernetFile.__init__-35"><span class="linenos">35</span></a>
-</span><span id="FernetFile.__init__-36"><a href="#FernetFile.__init__-36"><span class="linenos">36</span></a><span class="sd">        The new class instance is based on fileobj, which can be a regular</span>
-</span><span id="FernetFile.__init__-37"><a href="#FernetFile.__init__-37"><span class="linenos">37</span></a><span class="sd">        file, an io.BytesIO object, or any other object which simulates a file.</span>
-</span><span id="FernetFile.__init__-38"><a href="#FernetFile.__init__-38"><span class="linenos">38</span></a><span class="sd">        It defaults to None, in which case filename is opened to provide</span>
-</span><span id="FernetFile.__init__-39"><a href="#FernetFile.__init__-39"><span class="linenos">39</span></a><span class="sd">        a file object.</span>
-</span><span id="FernetFile.__init__-40"><a href="#FernetFile.__init__-40"><span class="linenos">40</span></a>
-</span><span id="FernetFile.__init__-41"><a href="#FernetFile.__init__-41"><span class="linenos">41</span></a><span class="sd">        When fileobj is not None, the filename argument is only used to be</span>
-</span><span id="FernetFile.__init__-42"><a href="#FernetFile.__init__-42"><span class="linenos">42</span></a><span class="sd">        included in the gzip file header, which may include the original</span>
-</span><span id="FernetFile.__init__-43"><a href="#FernetFile.__init__-43"><span class="linenos">43</span></a><span class="sd">        filename of the uncompressed file.  It defaults to the filename of</span>
-</span><span id="FernetFile.__init__-44"><a href="#FernetFile.__init__-44"><span class="linenos">44</span></a><span class="sd">        fileobj, if discernible; otherwise, it defaults to the empty string,</span>
-</span><span id="FernetFile.__init__-45"><a href="#FernetFile.__init__-45"><span class="linenos">45</span></a><span class="sd">        and in this case the original filename is not included in the header.</span>
-</span><span id="FernetFile.__init__-46"><a href="#FernetFile.__init__-46"><span class="linenos">46</span></a>
-</span><span id="FernetFile.__init__-47"><a href="#FernetFile.__init__-47"><span class="linenos">47</span></a><span class="sd">        The mode argument can be any of &#39;r&#39;, &#39;rb&#39;, &#39;a&#39;, &#39;ab&#39;, &#39;w&#39;, &#39;wb&#39;, &#39;x&#39;, or</span>
-</span><span id="FernetFile.__init__-48"><a href="#FernetFile.__init__-48"><span class="linenos">48</span></a><span class="sd">        &#39;xb&#39; depending on whether the file will be read or written.  The default</span>
-</span><span id="FernetFile.__init__-49"><a href="#FernetFile.__init__-49"><span class="linenos">49</span></a><span class="sd">        is the mode of fileobj if discernible; otherwise, the default is &#39;rb&#39;.</span>
-</span><span id="FernetFile.__init__-50"><a href="#FernetFile.__init__-50"><span class="linenos">50</span></a><span class="sd">        A mode of &#39;r&#39; is equivalent to one of &#39;rb&#39;, and similarly for &#39;w&#39; and</span>
-</span><span id="FernetFile.__init__-51"><a href="#FernetFile.__init__-51"><span class="linenos">51</span></a><span class="sd">        &#39;wb&#39;, &#39;a&#39; and &#39;ab&#39;, and &#39;x&#39; and &#39;xb&#39;.</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="FernetFile.__init__-25"><a href="#FernetFile.__init__-25"><span class="linenos">25</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="FernetFile.__init__-26"><a href="#FernetFile.__init__-26"><span class="linenos">26</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">WRITE_BUFFER_SIZE</span><span class="p">,</span>
+</span><span id="FernetFile.__init__-27"><a href="#FernetFile.__init__-27"><span class="linenos">27</span></a>            <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="FernetFile.__init__-28"><a href="#FernetFile.__init__-28"><span class="linenos">28</span></a>        <span class="p">):</span>
+</span><span id="FernetFile.__init__-29"><a href="#FernetFile.__init__-29"><span class="linenos">29</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for the FernetFile class.</span>
+</span><span id="FernetFile.__init__-30"><a href="#FernetFile.__init__-30"><span class="linenos">30</span></a>
+</span><span id="FernetFile.__init__-31"><a href="#FernetFile.__init__-31"><span class="linenos">31</span></a><span class="sd">        At least one of fileobj and filename must be given a</span>
+</span><span id="FernetFile.__init__-32"><a href="#FernetFile.__init__-32"><span class="linenos">32</span></a><span class="sd">        non-trivial value.</span>
+</span><span id="FernetFile.__init__-33"><a href="#FernetFile.__init__-33"><span class="linenos">33</span></a>
+</span><span id="FernetFile.__init__-34"><a href="#FernetFile.__init__-34"><span class="linenos">34</span></a><span class="sd">        The new class instance is based on fileobj, which can be a regular</span>
+</span><span id="FernetFile.__init__-35"><a href="#FernetFile.__init__-35"><span class="linenos">35</span></a><span class="sd">        file, an io.BytesIO object, or any other object which simulates a file.</span>
+</span><span id="FernetFile.__init__-36"><a href="#FernetFile.__init__-36"><span class="linenos">36</span></a><span class="sd">        It defaults to None, in which case filename is opened to provide</span>
+</span><span id="FernetFile.__init__-37"><a href="#FernetFile.__init__-37"><span class="linenos">37</span></a><span class="sd">        a file object.</span>
+</span><span id="FernetFile.__init__-38"><a href="#FernetFile.__init__-38"><span class="linenos">38</span></a>
+</span><span id="FernetFile.__init__-39"><a href="#FernetFile.__init__-39"><span class="linenos">39</span></a><span class="sd">        When fileobj is not None, the filename argument is only used to be</span>
+</span><span id="FernetFile.__init__-40"><a href="#FernetFile.__init__-40"><span class="linenos">40</span></a><span class="sd">        included in the gzip file header, which may include the original</span>
+</span><span id="FernetFile.__init__-41"><a href="#FernetFile.__init__-41"><span class="linenos">41</span></a><span class="sd">        filename of the uncompressed file.  It defaults to the filename of</span>
+</span><span id="FernetFile.__init__-42"><a href="#FernetFile.__init__-42"><span class="linenos">42</span></a><span class="sd">        fileobj, if discernible; otherwise, it defaults to the empty string,</span>
+</span><span id="FernetFile.__init__-43"><a href="#FernetFile.__init__-43"><span class="linenos">43</span></a><span class="sd">        and in this case the original filename is not included in the header.</span>
+</span><span id="FernetFile.__init__-44"><a href="#FernetFile.__init__-44"><span class="linenos">44</span></a>
+</span><span id="FernetFile.__init__-45"><a href="#FernetFile.__init__-45"><span class="linenos">45</span></a><span class="sd">        The mode argument can be any of &#39;r&#39;, &#39;rb&#39;, &#39;a&#39;, &#39;ab&#39;, &#39;w&#39;, &#39;wb&#39;, &#39;x&#39;, or</span>
+</span><span id="FernetFile.__init__-46"><a href="#FernetFile.__init__-46"><span class="linenos">46</span></a><span class="sd">        &#39;xb&#39; depending on whether the file will be read or written.  The default</span>
+</span><span id="FernetFile.__init__-47"><a href="#FernetFile.__init__-47"><span class="linenos">47</span></a><span class="sd">        is the mode of fileobj if discernible; otherwise, the default is &#39;rb&#39;.</span>
+</span><span id="FernetFile.__init__-48"><a href="#FernetFile.__init__-48"><span class="linenos">48</span></a><span class="sd">        A mode of &#39;r&#39; is equivalent to one of &#39;rb&#39;, and similarly for &#39;w&#39; and</span>
+</span><span id="FernetFile.__init__-49"><a href="#FernetFile.__init__-49"><span class="linenos">49</span></a><span class="sd">        &#39;wb&#39;, &#39;a&#39; and &#39;ab&#39;, and &#39;x&#39; and &#39;xb&#39;.</span>
+</span><span id="FernetFile.__init__-50"><a href="#FernetFile.__init__-50"><span class="linenos">50</span></a>
+</span><span id="FernetFile.__init__-51"><a href="#FernetFile.__init__-51"><span class="linenos">51</span></a><span class="sd">        The fernet_key argument is the Fernet key used to crypt/decrypt data.</span>
 </span><span id="FernetFile.__init__-52"><a href="#FernetFile.__init__-52"><span class="linenos">52</span></a>
-</span><span id="FernetFile.__init__-53"><a href="#FernetFile.__init__-53"><span class="linenos">53</span></a><span class="sd">        The fernet_key argument is the Fernet key used to crypt/decrypt data.</span>
-</span><span id="FernetFile.__init__-54"><a href="#FernetFile.__init__-54"><span class="linenos">54</span></a>
-</span><span id="FernetFile.__init__-55"><a href="#FernetFile.__init__-55"><span class="linenos">55</span></a><span class="sd">        Encryption is done by chunks to reduce memory footprint. The default</span>
-</span><span id="FernetFile.__init__-56"><a href="#FernetFile.__init__-56"><span class="linenos">56</span></a><span class="sd">        chunk_size is 64KB.</span>
-</span><span id="FernetFile.__init__-57"><a href="#FernetFile.__init__-57"><span class="linenos">57</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="FernetFile.__init__-58"><a href="#FernetFile.__init__-58"><span class="linenos">58</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="n">fileobj</span><span class="p">,</span>
-</span><span id="FernetFile.__init__-59"><a href="#FernetFile.__init__-59"><span class="linenos">59</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">write_buffer_size</span><span class="p">,</span>
-</span><span id="FernetFile.__init__-60"><a href="#FernetFile.__init__-60"><span class="linenos">60</span></a>            <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
+</span><span id="FernetFile.__init__-53"><a href="#FernetFile.__init__-53"><span class="linenos">53</span></a><span class="sd">        Encryption is done by chunks to reduce memory footprint. The default</span>
+</span><span id="FernetFile.__init__-54"><a href="#FernetFile.__init__-54"><span class="linenos">54</span></a><span class="sd">        chunk_size is 64KB.</span>
+</span><span id="FernetFile.__init__-55"><a href="#FernetFile.__init__-55"><span class="linenos">55</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="FernetFile.__init__-56"><a href="#FernetFile.__init__-56"><span class="linenos">56</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fileobj</span><span class="o">=</span><span class="n">fileobj</span><span class="p">,</span>
+</span><span id="FernetFile.__init__-57"><a href="#FernetFile.__init__-57"><span class="linenos">57</span></a>            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">write_buffer_size</span><span class="o">=</span><span class="n">write_buffer_size</span><span class="p">,</span>
+</span><span id="FernetFile.__init__-58"><a href="#FernetFile.__init__-58"><span class="linenos">58</span></a>            <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -594,33 +695,33 @@ chunk_size is 64KB.</p>
 
     </div>
     <a class="headerlink" href="#open"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="open-86"><a href="#open-86"><span class="linenos"> 86</span></a><span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="open-87"><a href="#open-87"><span class="linenos"> 87</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="open-88"><a href="#open-88"><span class="linenos"> 88</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">):</span>
-</span><span id="open-89"><a href="#open-89"><span class="linenos"> 89</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a Fernet file in binary or text mode.</span>
-</span><span id="open-90"><a href="#open-90"><span class="linenos"> 90</span></a>
-</span><span id="open-91"><a href="#open-91"><span class="linenos"> 91</span></a><span class="sd">    The filename argument can be an actual filename (a str or bytes object), or</span>
-</span><span id="open-92"><a href="#open-92"><span class="linenos"> 92</span></a><span class="sd">    an existing file object to read from or write to.</span>
-</span><span id="open-93"><a href="#open-93"><span class="linenos"> 93</span></a>
-</span><span id="open-94"><a href="#open-94"><span class="linenos"> 94</span></a><span class="sd">    The mode argument can be &quot;r&quot;, &quot;rb&quot;, &quot;w&quot;, &quot;wb&quot;, &quot;x&quot;, &quot;xb&quot;, &quot;a&quot; or &quot;ab&quot; for</span>
-</span><span id="open-95"><a href="#open-95"><span class="linenos"> 95</span></a><span class="sd">    binary mode, or &quot;rt&quot;, &quot;wt&quot;, &quot;xt&quot; or &quot;at&quot; for text mode. The default mode is</span>
-</span><span id="open-96"><a href="#open-96"><span class="linenos"> 96</span></a><span class="sd">    &quot;rb&quot;.</span>
-</span><span id="open-97"><a href="#open-97"><span class="linenos"> 97</span></a>
-</span><span id="open-98"><a href="#open-98"><span class="linenos"> 98</span></a><span class="sd">    For binary mode, this function is equivalent to the FernetFile constructor:</span>
-</span><span id="open-99"><a href="#open-99"><span class="linenos"> 99</span></a><span class="sd">    FernetFile(filename, mode, fernet_key). In this case, the encoding, errors</span>
-</span><span id="open-100"><a href="#open-100"><span class="linenos">100</span></a><span class="sd">    and newline arguments must not be provided.</span>
-</span><span id="open-101"><a href="#open-101"><span class="linenos">101</span></a>
-</span><span id="open-102"><a href="#open-102"><span class="linenos">102</span></a><span class="sd">    For text mode, a FernetFile object is created, and wrapped in an</span>
-</span><span id="open-103"><a href="#open-103"><span class="linenos">103</span></a><span class="sd">    io.TextIOWrapper instance with the specified encoding, error handling</span>
-</span><span id="open-104"><a href="#open-104"><span class="linenos">104</span></a><span class="sd">    behavior, and line ending(s).</span>
-</span><span id="open-105"><a href="#open-105"><span class="linenos">105</span></a>
-</span><span id="open-106"><a href="#open-106"><span class="linenos">106</span></a><span class="sd">    Encryption is done by chunks to reduce memory footprint. The default</span>
-</span><span id="open-107"><a href="#open-107"><span class="linenos">107</span></a><span class="sd">    chunk_size is 64KB.</span>
-</span><span id="open-108"><a href="#open-108"><span class="linenos">108</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="open-109"><a href="#open-109"><span class="linenos">109</span></a>    <span class="k">return</span> <span class="n">_open_t</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
-</span><span id="open-110"><a href="#open-110"><span class="linenos">110</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="n">newline</span><span class="p">,</span>
-</span><span id="open-111"><a href="#open-111"><span class="linenos">111</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
-</span><span id="open-112"><a href="#open-112"><span class="linenos">112</span></a>         <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="open-118"><a href="#open-118"><span class="linenos">118</span></a><span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="open-119"><a href="#open-119"><span class="linenos">119</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="open-120"><a href="#open-120"><span class="linenos">120</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">CHUNK_SIZE</span><span class="p">):</span>
+</span><span id="open-121"><a href="#open-121"><span class="linenos">121</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a Fernet file in binary or text mode.</span>
+</span><span id="open-122"><a href="#open-122"><span class="linenos">122</span></a>
+</span><span id="open-123"><a href="#open-123"><span class="linenos">123</span></a><span class="sd">    The filename argument can be an actual filename (a str or bytes object), or</span>
+</span><span id="open-124"><a href="#open-124"><span class="linenos">124</span></a><span class="sd">    an existing file object to read from or write to.</span>
+</span><span id="open-125"><a href="#open-125"><span class="linenos">125</span></a>
+</span><span id="open-126"><a href="#open-126"><span class="linenos">126</span></a><span class="sd">    The mode argument can be &quot;r&quot;, &quot;rb&quot;, &quot;w&quot;, &quot;wb&quot;, &quot;x&quot;, &quot;xb&quot;, &quot;a&quot; or &quot;ab&quot; for</span>
+</span><span id="open-127"><a href="#open-127"><span class="linenos">127</span></a><span class="sd">    binary mode, or &quot;rt&quot;, &quot;wt&quot;, &quot;xt&quot; or &quot;at&quot; for text mode. The default mode is</span>
+</span><span id="open-128"><a href="#open-128"><span class="linenos">128</span></a><span class="sd">    &quot;rb&quot;.</span>
+</span><span id="open-129"><a href="#open-129"><span class="linenos">129</span></a>
+</span><span id="open-130"><a href="#open-130"><span class="linenos">130</span></a><span class="sd">    For binary mode, this function is equivalent to the FernetFile constructor:</span>
+</span><span id="open-131"><a href="#open-131"><span class="linenos">131</span></a><span class="sd">    FernetFile(filename, mode, fernet_key). In this case, the encoding, errors</span>
+</span><span id="open-132"><a href="#open-132"><span class="linenos">132</span></a><span class="sd">    and newline arguments must not be provided.</span>
+</span><span id="open-133"><a href="#open-133"><span class="linenos">133</span></a>
+</span><span id="open-134"><a href="#open-134"><span class="linenos">134</span></a><span class="sd">    For text mode, a FernetFile object is created, and wrapped in an</span>
+</span><span id="open-135"><a href="#open-135"><span class="linenos">135</span></a><span class="sd">    io.TextIOWrapper instance with the specified encoding, error handling</span>
+</span><span id="open-136"><a href="#open-136"><span class="linenos">136</span></a><span class="sd">    behavior, and line ending(s).</span>
+</span><span id="open-137"><a href="#open-137"><span class="linenos">137</span></a>
+</span><span id="open-138"><a href="#open-138"><span class="linenos">138</span></a><span class="sd">    Encryption is done by chunks to reduce memory footprint. The default</span>
+</span><span id="open-139"><a href="#open-139"><span class="linenos">139</span></a><span class="sd">    chunk_size is 64KB.</span>
+</span><span id="open-140"><a href="#open-140"><span class="linenos">140</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="open-141"><a href="#open-141"><span class="linenos">141</span></a>    <span class="k">return</span> <span class="n">_open_t</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+</span><span id="open-142"><a href="#open-142"><span class="linenos">142</span></a>         <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="n">newline</span><span class="p">,</span>
+</span><span id="open-143"><a href="#open-143"><span class="linenos">143</span></a>         <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
+</span><span id="open-144"><a href="#open-144"><span class="linenos">144</span></a>         <span class="n">cryptor</span><span class="o">=</span><span class="s1">&#39;fernet&#39;</span><span class="p">,</span> <span class="n">fernet_key</span><span class="o">=</span><span class="n">fernet_key</span><span class="p">)</span>
 </span></pre></div>
 
 
