@@ -69,6 +69,7 @@ class FernetCryptor(Cryptor):
         import importlib
         return importlib.import_module('base64')
 
+    @classmethod
     @reify
     def _imp_cryptography_fernet(cls):
         """Lazy loader for cryptography.fernet"""
